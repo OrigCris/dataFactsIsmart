@@ -21,7 +21,7 @@
       background: white; padding: 20px; border-radius: 8px;
       width: 400px;
     }
-    #modal input { width: 100%; padding: 8px; margin-bottom: 10px; }
+    #modal input { width: 98%; padding: 8px; margin-bottom: 10px; }
     #modal button { padding: 8px 16px; cursor: pointer; }
   </style>
 </head>
@@ -29,7 +29,7 @@
 
 <h1>📋 Contatos de Alunos</h1>
 <a href="/" class="botao">⬅ Voltar</a>
-<a href="/contato_aluno/novo" class="botao">➕ Novo Contato</a>
+<!-- <a href="/contato_aluno/novo" class="botao">➕ Novo Contato</a> -->
 <br><br>
 
 <table>
@@ -48,7 +48,7 @@
       <td>{{ c.celular }}</td>
       <td>
         <a href="#" class="botao" onclick="abrirModal({{ c.id_contato_aluno }}, '{{ c.ra }}', '{{ c.email_ismart }}', '{{ c.email_pessoal }}', '{{ c.celular }}')">Editar</a> |
-        <a href="/contato_aluno/deletar/{{ c.id_contato_aluno }}" class="botao" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a>
+        <!-- <a href="/contato_aluno/deletar/{{ c.id_contato_aluno }}" class="botao" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a> -->
       </td>
     </tr>
     {% endfor %}

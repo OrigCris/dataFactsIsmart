@@ -58,35 +58,6 @@ def listar_contatos():
     conn.close()
     return render_template('contato_aluno_list.html', contatos=contatos)
 
-# ==========================
-# ➕ Criar novo contato
-# ==========================
-
-@app.route('/contato_aluno/novo', methods=['GET', 'POST'])
-def novo_contato():
-    if request.method == 'POST':
-        data = request.form
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO contato_aluno (
-                ra, email_ismart, email_pessoal, celular, telefone_fixo,
-                linkedin, facebook, instagram,
-                nome_emergencia1, tel_emergencia1, parentesco_emergencia1,
-                nome_emergencia2, tel_emergencia2, parentesco_emergencia2
-            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        """, (
-            data['ra'], data['email_ismart'], data['email_pessoal'],
-            data['celular'], data['telefone_fixo'], data['linkedin'],
-            data['facebook'], data['instagram'],
-            data['nome_emergencia1'], data['tel_emergencia1'], data['parentesco_emergencia1'],
-            data['nome_emergencia2'], data['tel_emergencia2'], data['parentesco_emergencia2']
-        ))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('listar_contatos'))
-    return render_template('contato_aluno_novo.html')
-
 @app.route('/contato_aluno/editar/<int:id>', methods=['GET', 'POST'])
 def editar_contato(id):
     conn = get_connection()
@@ -129,15 +100,6 @@ def update_ajax(id):
     conn.commit()
     conn.close()
     return jsonify({"status": "ok"})
-
-@app.route('/contato_aluno/deletar/<int:id>')
-def deletar_contato(id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM contato_aluno WHERE id_contato_aluno=%s", (id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('listar_contatos'))
 
 if __name__ == '__main__':
     app.run(debug=True)
