@@ -2,11 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Clientes</title>
+  <title>Admin - Tabelas</title>
 </head>
 <body>
-  <h1>Lista de Clientes</h1>
-  <a href="/novo">➕ Novo Cliente</a>
-
+  <h1>Escolha a tabela para gerenciar</h1>
+  <ul>
+    {% for tabela in tabelas %}
+      <li><a href="/{{ tabela.nome }}">{{ tabela.descricao }}</a></li>
+    {% endfor %}
+  </ul>
 </body>
 </html>

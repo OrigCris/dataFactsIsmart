@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Contatos de Alunos</title>
+</head>
+<body>
+  <h1>📋 Contatos de Alunos</h1>
+  <a href="/contato_aluno/novo">➕ Novo Contato</a>
+  <table border="1">
+    <tr>
+      <th>ID</th><th>RA</th><th>Email Ismart</th><th>Email Pessoal</th><th>Celular</th><th>Ações</th>
+    </tr>
+    {% for c in contatos %}
+    <tr>
+      <td>{{ c.id }}</td>
+      <td>{{ c.ra }}</td>
+      <td>{{ c.email_ismart }}</td>
+      <td>{{ c.email_pessoal }}</td>
+      <td>{{ c.celular }}</td>
+      <td>
+        <a href="/contato_aluno/editar/{{ c.id }}">Editar</a> |
+        <a href="/contato_aluno/deletar/{{ c.id }}">Excluir</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
