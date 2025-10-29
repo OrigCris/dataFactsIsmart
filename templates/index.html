@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Clientes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <h1>Lista de Clientes</h1>
+  <a href="/novo">➕ Novo Cliente</a>
+
+  <table border="1">
+    <tr><th>ID</th><th>Nome</th><th>Email</th><th>Ações</th></tr>
+    {% for cliente in clientes %}
+      <tr>
+        <td>{{ cliente.id }}</td>
+        <td>{{ cliente.nome }}</td>
+        <td>{{ cliente.email }}</td>
+        <td>
+          <a href="/editar/{{ cliente.id }}">Editar</a> |
+          <a href="/deletar/{{ cliente.id }}">Excluir</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
