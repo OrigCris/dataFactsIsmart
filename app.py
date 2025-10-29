@@ -4,12 +4,23 @@ import pyodbc
 app = Flask(__name__)
 
 # conexão com SQL Server
-conn_str = (
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=ismart-sql-server.database.windows.net;"
-    "DATABASE=dev-ismart-sql-db;"
-    "UID=ismart;"
-    "PWD=Adminsmart!;"
+server = 'ismart-sql-server.database.windows.net'
+database = 'dev-ismart-sql-db'
+username = 'ismart'
+password = 'Adminsmart!'
+driver = "ODBC Driver 18 for SQL Server"
+
+# Build connection string with SQL authentication
+CONNECTION_STRING = (
+    f'Driver={{{driver}}};'
+    f'Server={server};'
+    f'Database={database};'
+    f'UID={username};'
+    f'PWD={password};'
+    'Encrypt=yes;'
+    'TrustServerCertificate=no;'
+    'Connection Timeout=30;'
+    'Login Timeout=15;'
 )
 
 # ==========================
@@ -28,7 +39,7 @@ def home():
 # ==========================
 @app.route('/contato_aluno')
 def listar_contatos():
-    conn = pyodbc.connect(conn_str)
+    conn = pyodbc.connect(CONNECTION_STRING)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id_contato_aluno, ra, email_ismart, email_pessoal, celular
