@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-import pyodbc
+import pymssql
 
 app = Flask(__name__)
 
@@ -23,6 +23,15 @@ CONNECTION_STRING = (
     'Login Timeout=15;'
 )
 
+def get_connection():
+    return pymssql.connect(
+        server=server,
+        user=username,
+        password=password,
+        database=database,
+        port=1433
+    )
+
 # ==========================
 # 🏠 Página inicial
 # ==========================
@@ -39,33 +48,25 @@ def home():
 # ==========================
 @app.route('/contato_aluno')
 def listar_contatos():
-    conn = pyodbc.connect(CONNECTION_STRING)
-    cursor = conn.cursor()
+    conn = get_connection()
+    cursor = conn.cursor(as_dict=True)
     cursor.execute("""
-        SELECT id_contato_aluno, ra, email_ismart, email_pessoal, celular
+        SELECT TOP 50 id_contato_aluno, ra, email_ismart, email_pessoal, celular
         FROM contato_aluno
     """)
-    contatos = [
-        {
-            "id": r[0],
-            "ra": r[1],
-            "email_ismart": r[2],
-            "email_pessoal": r[3],
-            "celular": r[4]
-        }
-        for r in cursor.fetchall()
-    ]
+    contatos = cursor.fetchall()
     conn.close()
     return render_template('contato_aluno_list.html', contatos=contatos)
 
 # ==========================
 # ➕ Criar novo contato
 # ==========================
+
 @app.route('/contato_aluno/novo', methods=['GET', 'POST'])
 def novo_contato():
     if request.method == 'POST':
         data = request.form
-        conn = pyodbc.connect(conn_str)
+        conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO contato_aluno (
@@ -73,8 +74,7 @@ def novo_contato():
                 linkedin, facebook, instagram,
                 nome_emergencia1, tel_emergencia1, parentesco_emergencia1,
                 nome_emergencia2, tel_emergencia2, parentesco_emergencia2
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (
             data['ra'], data['email_ismart'], data['email_pessoal'],
             data['celular'], data['telefone_fixo'], data['linkedin'],
@@ -87,22 +87,19 @@ def novo_contato():
         return redirect(url_for('listar_contatos'))
     return render_template('contato_aluno_novo.html')
 
-# ==========================
-# ✏️ Editar contato
-# ==========================
 @app.route('/contato_aluno/editar/<int:id>', methods=['GET', 'POST'])
 def editar_contato(id):
-    conn = pyodbc.connect(conn_str)
-    cursor = conn.cursor()
+    conn = get_connection()
+    cursor = conn.cursor(as_dict=True)
     if request.method == 'POST':
         data = request.form
         cursor.execute("""
             UPDATE contato_aluno
-            SET ra=?, email_ismart=?, email_pessoal=?, celular=?, telefone_fixo=?,
-                linkedin=?, facebook=?, instagram=?,
-                nome_emergencia1=?, tel_emergencia1=?, parentesco_emergencia1=?,
-                nome_emergencia2=?, tel_emergencia2=?, parentesco_emergencia2=?
-            WHERE id_contato_aluno=?
+            SET ra=%s, email_ismart=%s, email_pessoal=%s, celular=%s, telefone_fixo=%s,
+                linkedin=%s, facebook=%s, instagram=%s,
+                nome_emergencia1=%s, tel_emergencia1=%s, parentesco_emergencia1=%s,
+                nome_emergencia2=%s, tel_emergencia2=%s, parentesco_emergencia2=%s
+            WHERE id_contato_aluno=%s
         """, (
             data['ra'], data['email_ismart'], data['email_pessoal'],
             data['celular'], data['telefone_fixo'], data['linkedin'],
@@ -114,24 +111,19 @@ def editar_contato(id):
         conn.commit()
         conn.close()
         return redirect(url_for('listar_contatos'))
-
-    cursor.execute("SELECT * FROM contato_aluno WHERE id_contato_aluno=?", id)
+    cursor.execute("SELECT * FROM contato_aluno WHERE id_contato_aluno=%s", (id,))
     contato = cursor.fetchone()
     conn.close()
     return render_template('contato_aluno_edit.html', contato=contato)
 
-# ==========================
-# ❌ Excluir contato
-# ==========================
 @app.route('/contato_aluno/deletar/<int:id>')
 def deletar_contato(id):
-    conn = pyodbc.connect(conn_str)
+    conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM contato_aluno WHERE id_contato_aluno=?", id)
+    cursor.execute("DELETE FROM contato_aluno WHERE id_contato_aluno=%s", (id,))
     conn.commit()
     conn.close()
     return redirect(url_for('listar_contatos'))
-
 
 if __name__ == '__main__':
     app.run(debug=True)
