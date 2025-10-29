@@ -52,7 +52,7 @@ def listar_contatos():
     cursor = conn.cursor(as_dict=True)
     cursor.execute("""
         SELECT TOP 50 id_contato_aluno, ra, email_ismart, email_pessoal, celular
-        FROM contato_aluno
+        FROM data_facts_ismart_contato_aluno
     """)
     contatos = cursor.fetchall()
     conn.close()
