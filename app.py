@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, jsonify
 import pymssql
 
 app = Flask(__name__)
@@ -115,6 +115,20 @@ def editar_contato(id):
     contato = cursor.fetchone()
     conn.close()
     return render_template('contato_aluno_edit.html', contato=contato)
+
+@app.route('/contato_aluno/update_ajax/<int:id>', methods=['POST'])
+def update_ajax(id):
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE contato_aluno
+        SET ra=%s, email_ismart=%s, email_pessoal=%s, celular=%s
+        WHERE id_contato_aluno=%s
+    """, (data['ra'], data['email_ismart'], data['email_pessoal'], data['celular'], id))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "ok"})
 
 @app.route('/contato_aluno/deletar/<int:id>')
 def deletar_contato(id):

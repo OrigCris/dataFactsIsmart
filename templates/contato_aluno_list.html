@@ -3,27 +3,119 @@
 <head>
   <meta charset="UTF-8">
   <title>Contatos de Alunos</title>
+  <style>
+    body { font-family: Arial; background: #f6f6f6; padding: 30px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; }
+    th { background: #eee; }
+    a.botao { text-decoration: none; color: #0078d7; font-weight: bold; }
+    a.botao:hover { color: #004f9e; }
+    #modal {
+      display: none;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center; align-items: center;
+    }
+    #modal-content {
+      background: white; padding: 20px; border-radius: 8px;
+      width: 400px;
+    }
+    #modal input { width: 100%; padding: 8px; margin-bottom: 10px; }
+    #modal button { padding: 8px 16px; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <h1>📋 Contatos de Alunos</h1>
-  <a href="/contato_aluno/novo">➕ Novo Contato</a>
-  <table border="1">
+
+<h1>📋 Contatos de Alunos</h1>
+<a href="/" class="botao">⬅ Voltar</a>
+<a href="/contato_aluno/novo" class="botao">➕ Novo Contato</a>
+<br><br>
+
+<table>
+  <thead>
     <tr>
       <th>ID</th><th>RA</th><th>Email Ismart</th><th>Email Pessoal</th><th>Celular</th><th>Ações</th>
     </tr>
+  </thead>
+  <tbody>
     {% for c in contatos %}
-    <tr>
+    <tr id="row-{{ c.id }}">
       <td>{{ c.id }}</td>
       <td>{{ c.ra }}</td>
       <td>{{ c.email_ismart }}</td>
       <td>{{ c.email_pessoal }}</td>
       <td>{{ c.celular }}</td>
       <td>
-        <a href="/contato_aluno/editar/{{ c.id }}">Editar</a> |
-        <a href="/contato_aluno/deletar/{{ c.id }}">Excluir</a>
+        <a href="#" class="botao" onclick="abrirModal({{ c.id }}, '{{ c.ra }}', '{{ c.email_ismart }}', '{{ c.email_pessoal }}', '{{ c.celular }}')">Editar</a> |
+        <a href="/contato_aluno/deletar/{{ c.id }}" class="botao" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a>
       </td>
     </tr>
     {% endfor %}
-  </table>
+  </tbody>
+</table>
+
+<!-- Modal -->
+<div id="modal">
+  <div id="modal-content">
+    <h3>Editar Contato</h3>
+    <form id="form-editar">
+      <input type="hidden" id="id">
+      <label>RA:</label>
+      <input type="text" id="ra"><br>
+      <label>Email Ismart:</label>
+      <input type="email" id="email_ismart"><br>
+      <label>Email Pessoal:</label>
+      <input type="email" id="email_pessoal"><br>
+      <label>Celular:</label>
+      <input type="text" id="celular"><br>
+      <button type="button" onclick="salvarEdicao()">💾 Salvar</button>
+      <button type="button" onclick="fecharModal()">❌ Fechar</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function abrirModal(id, ra, email_ismart, email_pessoal, celular) {
+  document.getElementById('id').value = id;
+  document.getElementById('ra').value = ra;
+  document.getElementById('email_ismart').value = email_ismart;
+  document.getElementById('email_pessoal').value = email_pessoal;
+  document.getElementById('celular').value = celular;
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function fecharModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+async function salvarEdicao() {
+  const id = document.getElementById('id').value;
+  const data = {
+    ra: document.getElementById('ra').value,
+    email_ismart: document.getElementById('email_ismart').value,
+    email_pessoal: document.getElementById('email_pessoal').value,
+    celular: document.getElementById('celular').value
+  };
+  const res = await fetch(`/contato_aluno/update_ajax/${id}`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  if (json.status === 'ok') {
+    // Atualiza tabela sem reload
+    const row = document.getElementById(`row-${id}`);
+    row.children[1].innerText = data.ra;
+    row.children[2].innerText = data.email_ismart;
+    row.children[3].innerText = data.email_pessoal;
+    row.children[4].innerText = data.celular;
+    fecharModal();
+  } else {
+    alert('Erro ao salvar alteração');
+  }
+}
+</script>
+
 </body>
 </html>
