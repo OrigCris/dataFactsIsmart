@@ -8,7 +8,7 @@ server = 'ismart-sql-server.database.windows.net'
 database = 'dev-ismart-sql-db'
 username = 'ismart'
 password = 'Adminsmart!'
-driver = "ODBC Driver 18 for SQL Server"
+driver = "ODBC Driver 17 for SQL Server"
 
 # Build connection string with SQL authentication
 CONNECTION_STRING = (
