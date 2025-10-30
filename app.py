@@ -37,8 +37,23 @@ def listar_contatos():
     conn = get_connection()
     cursor = conn.cursor(as_dict=True)
     cursor.execute("""
-        SELECT TOP 100 id_contato_aluno, ra, email_ismart, email_pessoal, celular
-        FROM data_facts_ismart_contato_aluno
+        SELECT TOP 100
+            id_contato_aluno,
+            ra,
+            email_ismart,
+            email_pessoal,
+            celular,
+            telefone_fixo,
+            linkedin,
+            facebook,
+            instagram,
+            nome_emergencia1,
+            tel_emergencia1,
+            parentesco_emergencia1,
+            nome_emergencia2,
+            tel_emergencia2,
+            parentesco_emergencia2
+        FROM dbo.data_facts_ismart_contato_aluno_v2
         ORDER BY id_contato_aluno ASC
     """)
     contatos = cursor.fetchall()
@@ -80,10 +95,40 @@ def update_ajax(id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        UPDATE contato_aluno
-        SET ra=%s, email_ismart=%s, email_pessoal=%s, celular=%s
-        WHERE id_contato_aluno=%s
-    """, (data['ra'], data['email_ismart'], data['email_pessoal'], data['celular'], id))
+        UPDATE dbo.data_facts_ismart_contato_aluno_v2
+        SET 
+            ra = %s,
+            email_ismart = %s,
+            email_pessoal = %s,
+            celular = %s,
+            telefone_fixo = %s,
+            linkedin = %s,
+            facebook = %s,
+            instagram = %s,
+            nome_emergencia1 = %s,
+            tel_emergencia1 = %s,
+            parentesco_emergencia1 = %s,
+            nome_emergencia2 = %s,
+            tel_emergencia2 = %s,
+            parentesco_emergencia2 = %s
+        WHERE id_contato_aluno = %s
+    """, (
+        data.get('ra'),
+        data.get('email_ismart'),
+        data.get('email_pessoal'),
+        data.get('celular'),
+        data.get('telefone_fixo'),
+        data.get('linkedin'),
+        data.get('facebook'),
+        data.get('instagram'),
+        data.get('nome_emergencia1'),
+        data.get('tel_emergencia1'),
+        data.get('parentesco_emergencia1'),
+        data.get('nome_emergencia2'),
+        data.get('tel_emergencia2'),
+        data.get('parentesco_emergencia2'),
+        id
+    ))
     conn.commit()
     conn.close()
     return jsonify({"status": "ok"})
