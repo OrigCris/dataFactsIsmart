@@ -8,20 +8,6 @@ server = 'ismart-sql-server.database.windows.net'
 database = 'dev-ismart-sql-db'
 username = 'ismart'
 password = 'Adminsmart!'
-driver = "ODBC Driver 17 for SQL Server"
-
-# Build connection string with SQL authentication
-CONNECTION_STRING = (
-    f'Driver={{{driver}}};'
-    f'Server={server};'
-    f'Database={database};'
-    f'UID={username};'
-    f'PWD={password};'
-    'Encrypt=yes;'
-    'TrustServerCertificate=no;'
-    'Connection Timeout=30;'
-    'Login Timeout=15;'
-)
 
 def get_connection():
     return pymssql.connect(
@@ -51,8 +37,9 @@ def listar_contatos():
     conn = get_connection()
     cursor = conn.cursor(as_dict=True)
     cursor.execute("""
-        SELECT TOP 50 id_contato_aluno, ra, email_ismart, email_pessoal, celular
+        SELECT id_contato_aluno, ra, email_ismart, email_pessoal, celular
         FROM data_facts_ismart_contato_aluno
+        ORDER BY id_contato_aluno DESC
     """)
     contatos = cursor.fetchall()
     conn.close()

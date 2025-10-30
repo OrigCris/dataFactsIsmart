@@ -32,13 +32,15 @@
 <!-- <a href="/contato_aluno/novo" class="botao">➕ Novo Contato</a> -->
 <br><br>
 
-<table>
+<input type="text" id="campo-busca" placeholder="🔍 Buscar RA, email ou celular..." style="width:50%; padding:8px; margin-bottom:15px;">
+
+<table id="tabela-contatos">
   <thead>
     <tr>
       <th>ID</th><th>RA</th><th>Email Ismart</th><th>Email Pessoal</th><th>Celular</th><th>Ações</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody id="corpo-tabela">
     {% for c in contatos %}
     <tr id="row-{{ c.id_contato_aluno }}">
       <td>{{ c.id_contato_aluno }}</td>
@@ -118,6 +120,16 @@ async function salvarEdicao() {
     alert('Erro ao salvar alteração');
   }
 }
+
+// --- 🔍 Busca direta na tabela ---
+document.getElementById('campo-busca').addEventListener('input', function() {
+  const termo = this.value.toLowerCase();
+  const linhas = document.querySelectorAll('#corpo-tabela tr');
+  linhas.forEach(linha => {
+    const texto = linha.innerText.toLowerCase();
+    linha.style.display = texto.includes(termo) ? '' : 'none';
+  });
+});
 </script>
 
 </body>
