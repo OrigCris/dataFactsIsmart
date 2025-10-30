@@ -2,14 +2,112 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Admin - Tabelas</title>
+  <title>Painel Admin - iSmart</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #004aad;
+      color: white;
+      width: 100%;
+      text-align: center;
+      padding: 30px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+
+    main {
+      margin-top: 40px;
+      width: 90%;
+      max-width: 1000px;
+      text-align: center;
+    }
+
+    .descricao {
+      font-size: 1.1em;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: all 0.25s ease-in-out;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+
+    .card a {
+      text-decoration: none;
+      color: #004aad;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .card a:hover {
+      color: #002b67;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 15px;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      color: #004aad;
+    }
+  </style>
 </head>
 <body>
-  <h1>Escolha a tabela para gerenciar</h1>
-  <ul>
+
+<header>
+  <h1>📊 Painel de Administração iSmart</h1>
+</header>
+
+<main>
+  <p class="descricao">Selecione uma tabela para gerenciar os dados do sistema:</p>
+  
+  <div class="grid">
     {% for tabela in tabelas %}
-      <li><a href="/{{ tabela.nome }}">{{ tabela.descricao }}</a></li>
+    <div class="card">
+      <div class="icon">🗂️</div>
+      <a href="/{{ tabela.nome }}">{{ tabela.descricao }}</a>
+    </div>
     {% endfor %}
-  </ul>
+  </div>
+</main>
+
+<footer>
+  © {{ now().year }} iSmart - Sistema de Administração de Dados
+</footer>
+
 </body>
 </html>
