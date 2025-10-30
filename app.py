@@ -37,9 +37,9 @@ def listar_contatos():
     conn = get_connection()
     cursor = conn.cursor(as_dict=True)
     cursor.execute("""
-        SELECT id_contato_aluno, ra, email_ismart, email_pessoal, celular
+        SELECT TOP 100 id_contato_aluno, ra, email_ismart, email_pessoal, celular
         FROM data_facts_ismart_contato_aluno
-        ORDER BY id_contato_aluno DESC
+        ORDER BY id_contato_aluno ASC
     """)
     contatos = cursor.fetchall()
     conn.close()
@@ -87,6 +87,36 @@ def update_ajax(id):
     conn.commit()
     conn.close()
     return jsonify({"status": "ok"})
+
+@app.route('/contato_aluno/search', methods=['GET'])
+def buscar_contatos():
+    termo = request.args.get('q', '').strip()
+    conn = get_connection()
+    cursor = conn.cursor(as_dict=True)
+
+    if termo == '':
+        # se não tiver filtro, retorna os 100 primeiros
+        cursor.execute("""
+            SELECT TOP 100 id_contato_aluno, ra, email_ismart, email_pessoal, celular
+            FROM data_facts_ismart_contato_aluno
+            ORDER BY id_contato_aluno DESC
+        """)
+    else:
+        query = """
+            SELECT TOP 100 id_contato_aluno, ra, email_ismart, email_pessoal, celular
+            FROM data_facts_ismart_contato_aluno
+            WHERE ra LIKE %s
+               OR email_ismart LIKE %s
+               OR email_pessoal LIKE %s
+               OR celular LIKE %s
+            ORDER BY id_contato_aluno DESC
+        """
+        like = f"%{termo}%"
+        cursor.execute(query, (like, like, like, like))
+
+    contatos = cursor.fetchall()
+    conn.close()
+    return jsonify(contatos)
 
 if __name__ == '__main__':
     app.run(debug=True)

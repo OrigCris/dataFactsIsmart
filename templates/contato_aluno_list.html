@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <title>Contatos de Alunos</title>
   <style>
-    body { font-family: Arial; background: #f6f6f6; padding: 30px; }
+    body { font-family: Arial, sans-serif; background: #f6f6f6; padding: 30px; }
     table { width: 100%; border-collapse: collapse; background: white; }
-    th, td { padding: 10px; border-bottom: 1px solid #ddd; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
     th { background: #eee; }
     a.botao { text-decoration: none; color: #0078d7; font-weight: bold; }
     a.botao:hover { color: #004f9e; }
@@ -23,6 +23,13 @@
     }
     #modal input { width: 98%; padding: 8px; margin-bottom: 10px; }
     #modal button { padding: 8px 16px; cursor: pointer; }
+    #mensagem { margin-top: 10px; font-style: italic; color: #666; }
+    #loading {
+      display: none;
+      font-size: 14px;
+      color: #0078d7;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +40,7 @@
 <br><br>
 
 <input type="text" id="campo-busca" placeholder="🔍 Buscar RA, email ou celular..." style="width:50%; padding:8px; margin-bottom:15px;">
+<div id="loading">⏳ Buscando...</div>
 
 <table id="tabela-contatos">
   <thead>
@@ -56,6 +64,8 @@
     {% endfor %}
   </tbody>
 </table>
+
+<p id="mensagem"></p>
 
 <!-- Modal -->
 <div id="modal">
@@ -121,15 +131,50 @@ async function salvarEdicao() {
   }
 }
 
-// --- 🔍 Busca direta na tabela ---
+// --- 🔍 Busca dinâmica no servidor (com debounce) ---
+let debounceTimer;
 document.getElementById('campo-busca').addEventListener('input', function() {
-  const termo = this.value.toLowerCase();
-  const linhas = document.querySelectorAll('#corpo-tabela tr');
-  linhas.forEach(linha => {
-    const texto = linha.innerText.toLowerCase();
-    linha.style.display = texto.includes(termo) ? '' : 'none';
-  });
+  clearTimeout(debounceTimer);
+  const termo = this.value.trim();
+  debounceTimer = setTimeout(() => buscarServidor(termo), 300);
 });
+
+async function buscarServidor(termo) {
+  const loading = document.getElementById('loading');
+  const mensagem = document.getElementById('mensagem');
+  const corpo = document.getElementById('corpo-tabela');
+  
+  loading.style.display = 'block';
+  mensagem.innerText = '';
+  corpo.innerHTML = '';
+
+  try {
+    const res = await fetch(`/contato_aluno/search?q=${encodeURIComponent(termo)}`);
+    const contatos = await res.json();
+
+    if (contatos.length === 0) {
+      mensagem.innerText = 'Nenhum resultado encontrado.';
+    } else {
+      contatos.forEach(c => {
+        const row = document.createElement('tr');
+        row.id = `row-${c.id_contato_aluno}`;
+        row.innerHTML = `
+          <td>${c.id_contato_aluno}</td>
+          <td>${c.ra}</td>
+          <td>${c.email_ismart}</td>
+          <td>${c.email_pessoal}</td>
+          <td>${c.celular}</td>
+          <td><a href="#" class="botao" onclick="abrirModal(${c.id_contato_aluno}, '${c.ra}', '${c.email_ismart}', '${c.email_pessoal}', '${c.celular}')">Editar</a></td>
+        `;
+        corpo.appendChild(row);
+      });
+    }
+  } catch (error) {
+    mensagem.innerText = 'Erro ao buscar dados.';
+  } finally {
+    loading.style.display = 'none';
+  }
+}
 </script>
 
 </body>
