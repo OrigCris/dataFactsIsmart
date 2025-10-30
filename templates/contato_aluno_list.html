@@ -52,7 +52,9 @@
       <td>{{ c.email_pessoal }}</td>
       <td>{{ c.celular }}</td>
       <td>
-        <a href="#" class="botao" onclick="abrirModal({{ c | tojson }})">Editar</a>
+        <a href="#" class="botao" 
+        data-contato='{{ c | tojson | safe }}'
+        onclick="abrirModal(this)">Editar</a>
       </td>
     </tr>
     {% endfor %}
@@ -90,7 +92,11 @@
 </div>
 
 <script>
-function abrirModal(contato) {
+function abrirModal(el) {
+  const contato = typeof el === 'object' && el.dataset 
+      ? JSON.parse(el.dataset.contato)
+      : el; // se vier do AJAX, já é o objeto puro
+
   for (const campo in contato) {
     const input = document.getElementById(campo);
     if (input) input.value = contato[campo] || '';
