@@ -99,7 +99,7 @@ def buscar_contatos():
         cursor.execute("""
             SELECT TOP 100 id_contato_aluno, ra, email_ismart, email_pessoal, celular
             FROM data_facts_ismart_contato_aluno
-            ORDER BY id_contato_aluno DESC
+            ORDER BY id_contato_aluno ASC
         """)
     else:
         query = """
@@ -109,7 +109,7 @@ def buscar_contatos():
                OR email_ismart LIKE %s
                OR email_pessoal LIKE %s
                OR celular LIKE %s
-            ORDER BY id_contato_aluno DESC
+            ORDER BY id_contato_aluno ASC
         """
         like = f"%{termo}%"
         cursor.execute(query, (like, like, like, like))
