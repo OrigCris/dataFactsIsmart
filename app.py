@@ -118,6 +118,12 @@ def listar_contatos():
 def update_ajax(id):
     data = request.get_json()
     usuario = session.get('usuario', 'desconhecido')
+
+    # 🔧 Converte strings vazias em None (NULL no SQL)
+    for key, value in data.items():
+        if isinstance(value, str) and value.strip() == '':
+            data[key] = None
+
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
