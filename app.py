@@ -1,7 +1,11 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from functools import wraps
+from datetime import datetime, timedelta
 import pymssql
 
 app = Flask(__name__)
+app.secret_key = 'chave-super-secreta'  # troque depois!
+app.permanent_session_lifetime = timedelta(minutes=30)
 
 # conexão com SQL Server
 server = 'ismart-sql-server.database.windows.net'
@@ -18,10 +22,50 @@ def get_connection():
         port=1433
     )
 
+# ======================================================
+# 🔒 Decorator para exigir login
+# ======================================================
+def login_requerido(f):
+    @wraps(f)
+    def decorador(*args, **kwargs):
+        if 'usuario' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorador
+
+# ======================================================
+# 🧠 Credenciais fixas para teste
+# ======================================================
+USUARIO_FIXO = "admin"
+SENHA_FIXA = "ismart"
+
+# ======================================================
+# 🔐 Rotas de login/logout
+# ======================================================
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        usuario = request.form['usuario']
+        senha = request.form['senha']
+
+        if usuario == USUARIO_FIXO and senha == SENHA_FIXA:
+            session['usuario'] = usuario
+            session.permanent = True
+            return redirect(url_for('home'))
+        else:
+            return render_template('login.html', erro="Usuário ou senha incorretos.")
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('usuario', None)
+    return redirect(url_for('login'))
+
 # ==========================
 # 🏠 Página inicial
 # ==========================
 @app.route('/')
+@login_requerido
 def home():
     tabelas = [
         {"nome": "contato_aluno", "descricao": "Contatos dos alunos"},
@@ -29,7 +73,7 @@ def home():
         {"nome": "#", "descricao": "Ficha dos alunos"},
         # você pode adicionar outras aqui no futuro
     ]
-    return render_template('index.html', tabelas=tabelas)
+    return render_template('index.html', tabelas=tabelas, current_year=datetime.now().year)
 
 # ==========================
 # 📋 Listagem de Contatos
