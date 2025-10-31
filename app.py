@@ -85,6 +85,7 @@ def home():
 # 📋 Listagem de Contatos
 # ==========================
 @app.route('/contato_aluno')
+@login_requerido
 def listar_contatos():
     conn = get_connection()
     cursor = conn.cursor(as_dict=True)
