@@ -222,7 +222,7 @@ def buscar_contatos():
             WHERE ra LIKE %s
                OR email_ismart LIKE %s
                OR email_pessoal LIKE %s
-               OR celular LIKE %
+               OR celular LIKE %s
                OR last_modified_by LIKE %s
             ORDER BY id_contato_aluno ASC
         """
