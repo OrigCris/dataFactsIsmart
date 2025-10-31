@@ -34,10 +34,14 @@ def login_requerido(f):
     return decorador
 
 # ======================================================
-# 🧠 Credenciais fixas para teste
+# 🧠 Credenciais fixas para teste (usuário: senha)
 # ======================================================
-USUARIO_FIXO = "admin"
-SENHA_FIXA = "ismart"
+USUARIOS_FIXOS = {
+    "admin": "ismart",
+    "elson": "ismart",
+    "fulano": "ismart",
+    "ciclano": "ismart"
+}
 
 # ======================================================
 # 🔐 Rotas de login/logout
@@ -48,12 +52,14 @@ def login():
         usuario = request.form['usuario']
         senha = request.form['senha']
 
-        if usuario == USUARIO_FIXO and senha == SENHA_FIXA:
+        # 🔒 Verifica se o usuário existe e a senha confere
+        if usuario in USUARIOS_FIXOS and USUARIOS_FIXOS[usuario] == senha:
             session['usuario'] = usuario
             session.permanent = True
             return redirect(url_for('home'))
         else:
             return render_template('login.html', erro="Usuário ou senha incorretos.")
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -107,8 +113,10 @@ def listar_contatos():
     return render_template('contato_aluno_list.html', contatos=contatos)
 
 @app.route('/contato_aluno/update_ajax/<int:id>', methods=['POST'])
+@login_requerido
 def update_ajax(id):
     data = request.get_json()
+    usuario = session.get('usuario', 'desconhecido')
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -127,7 +135,8 @@ def update_ajax(id):
             parentesco_emergencia1 = %s,
             nome_emergencia2 = %s,
             tel_emergencia2 = %s,
-            parentesco_emergencia2 = %s
+            parentesco_emergencia2 = %s,
+            last_modified_by = %s
         WHERE id_contato_aluno = %s
     """, (
         data.get('ra'),
@@ -144,6 +153,7 @@ def update_ajax(id):
         data.get('nome_emergencia2'),
         data.get('tel_emergencia2'),
         data.get('parentesco_emergencia2'),
+        usuario,
         id
     ))
     conn.commit()
