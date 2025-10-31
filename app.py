@@ -25,6 +25,8 @@ def get_connection():
 def home():
     tabelas = [
         {"nome": "contato_aluno", "descricao": "Contatos dos alunos"},
+        {"nome": "#", "descricao": "Endereço dos alunos"},
+        {"nome": "#", "descricao": "Ficha dos alunos"},
         # você pode adicionar outras aqui no futuro
     ]
     return render_template('index.html', tabelas=tabelas)
@@ -59,35 +61,6 @@ def listar_contatos():
     contatos = cursor.fetchall()
     conn.close()
     return render_template('contato_aluno_list.html', contatos=contatos)
-
-@app.route('/contato_aluno/editar/<int:id>', methods=['GET', 'POST'])
-def editar_contato(id):
-    conn = get_connection()
-    cursor = conn.cursor(as_dict=True)
-    if request.method == 'POST':
-        data = request.form
-        cursor.execute("""
-            UPDATE contato_aluno
-            SET ra=%s, email_ismart=%s, email_pessoal=%s, celular=%s, telefone_fixo=%s,
-                linkedin=%s, facebook=%s, instagram=%s,
-                nome_emergencia1=%s, tel_emergencia1=%s, parentesco_emergencia1=%s,
-                nome_emergencia2=%s, tel_emergencia2=%s, parentesco_emergencia2=%s
-            WHERE id_contato_aluno=%s
-        """, (
-            data['ra'], data['email_ismart'], data['email_pessoal'],
-            data['celular'], data['telefone_fixo'], data['linkedin'],
-            data['facebook'], data['instagram'],
-            data['nome_emergencia1'], data['tel_emergencia1'], data['parentesco_emergencia1'],
-            data['nome_emergencia2'], data['tel_emergencia2'], data['parentesco_emergencia2'],
-            id
-        ))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('listar_contatos'))
-    cursor.execute("SELECT * FROM contato_aluno WHERE id_contato_aluno=%s", (id,))
-    contato = cursor.fetchone()
-    conn.close()
-    return render_template('contato_aluno_edit.html', contato=contato)
 
 @app.route('/contato_aluno/update_ajax/<int:id>', methods=['POST'])
 def update_ajax(id):
@@ -158,7 +131,7 @@ def buscar_contatos():
                 tel_emergencia2,
                 parentesco_emergencia2
             FROM dbo.data_facts_ismart_contato_aluno_v2
-            ORDER BY id_contato_aluno DESC
+            ORDER BY id_contato_aluno ASC
         """)
     else:
         query = """
@@ -183,7 +156,7 @@ def buscar_contatos():
                OR email_ismart LIKE %s
                OR email_pessoal LIKE %s
                OR celular LIKE %s
-            ORDER BY id_contato_aluno DESC
+            ORDER BY id_contato_aluno ASC
         """
         like = f"%{termo}%"
         cursor.execute(query, (like, like, like, like))
