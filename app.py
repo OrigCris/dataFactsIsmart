@@ -169,6 +169,62 @@ def update_ajax(id):
     conn.close()
     return jsonify({"status": "ok"})
 
+@app.route('/contato_aluno/add_ajax', methods=['POST'])
+@login_requerido
+def add_ajax():
+    data = request.get_json()
+    usuario = session.get('usuario', 'desconhecido')
+
+    # Converte strings vazias em None
+    for key, value in data.items():
+        if isinstance(value, str) and value.strip() == '':
+            data[key] = None
+
+    conn = get_connection()
+    cursor = conn.cursor(as_dict=True)
+
+    cursor.execute("""
+        INSERT INTO dbo.data_facts_ismart_contato_aluno_v2 (
+            ra, email_ismart, email_pessoal, celular, telefone_fixo,
+            linkedin, facebook, instagram,
+            nome_emergencia1, tel_emergencia1, parentesco_emergencia1,
+            nome_emergencia2, tel_emergencia2, parentesco_emergencia2,
+            last_modified_by, created_at
+        )
+        OUTPUT INSERTED.id_contato_aluno
+        VALUES (%s, %s, %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s,
+                %s, GETDATE())
+    """, (
+        data.get('ra'),
+        data.get('email_ismart'),
+        data.get('email_pessoal'),
+        data.get('celular'),
+        data.get('telefone_fixo'),
+        data.get('linkedin'),
+        data.get('facebook'),
+        data.get('instagram'),
+        data.get('nome_emergencia1'),
+        data.get('tel_emergencia1'),
+        data.get('parentesco_emergencia1'),
+        data.get('nome_emergencia2'),
+        data.get('tel_emergencia2'),
+        data.get('parentesco_emergencia2'),
+        usuario
+    ))
+
+    new_id = cursor.fetchone()['id_contato_aluno']
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "ok",
+        "id_contato_aluno": new_id,
+        "last_modified_by": usuario
+    })
+
 @app.route('/contato_aluno/search', methods=['GET'])
 def buscar_contatos():
     termo = request.args.get('q', '').strip()

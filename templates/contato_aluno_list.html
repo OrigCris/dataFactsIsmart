@@ -10,20 +10,22 @@
     th { background: #eee; }
     a.botao { text-decoration: none; color: #0078d7; font-weight: bold; }
     a.botao:hover { color: #004f9e; }
-    #modal {
+    #modal, #modal-novo {
       display: none;
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.6);
       justify-content: center; align-items: center;
       overflow: auto;
+      z-index: 1000;
     }
-    #modal-content {
+    .modal-content {
       background: white; padding: 20px; border-radius: 8px;
       width: 500px; max-height: 90%; overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
-    #modal input { width: 98%; padding: 6px; margin-bottom: 8px; }
-    #modal button { padding: 8px 16px; cursor: pointer; }
+    input { width: 98%; padding: 6px; margin-bottom: 8px; }
+    button { padding: 8px 16px; margin-top: 5px; cursor: pointer; }
     #loading { display: none; color: #0078d7; margin-bottom: 8px; }
     #mensagem { color: #555; font-style: italic; margin-top: 10px; }
   </style>
@@ -32,6 +34,7 @@
 
 <h1>📋 Contatos de Alunos</h1>
 <a href="/" class="botao">⬅ Voltar</a>
+<a href="#" class="botao" onclick="abrirModalNovo()">➕ Novo Contato</a>
 <br><br>
 
 <input type="text" id="campo-busca" placeholder="🔍 Buscar RA, e-mail ou nome..." style="width:50%; padding:8px; margin-bottom:10px;">
@@ -59,11 +62,9 @@
       <td>{{ c.email_pessoal }}</td>
       <td>{{ c.celular }}</td>
       <td>{{ c.last_modified_by or '-' }}</td>
-      <td>{{ c.ValidFrom}}</td>
+      <td>{{ c.ValidFrom }}</td>
       <td>
-        <a href="#" class="botao" 
-        data-contato='{{ c | tojson | safe }}'
-        onclick="abrirModal(this)">Editar</a>
+        <a href="#" class="botao" data-contato='{{ c | tojson | safe }}' onclick="abrirModal(this)">Editar</a>
       </td>
     </tr>
     {% endfor %}
@@ -72,9 +73,9 @@
 
 <p id="mensagem"></p>
 
-<!-- Modal -->
+<!-- Modal Editar -->
 <div id="modal">
-  <div id="modal-content">
+  <div class="modal-content">
     <h3>Editar Contato</h3>
     <form id="form-editar">
       <input type="hidden" id="id_contato_aluno">
@@ -82,29 +83,33 @@
       <label>Email Ismart:</label> <input type="email" id="email_ismart"><br>
       <label>Email Pessoal:</label> <input type="email" id="email_pessoal"><br>
       <label>Celular:</label> <input type="text" id="celular"><br>
-      <label>Telefone Fixo:</label> <input type="text" id="telefone_fixo"><br>
-      <label>LinkedIn:</label> <input type="text" id="linkedin"><br>
-      <label>Facebook:</label> <input type="text" id="facebook"><br>
-      <label>Instagram:</label> <input type="text" id="instagram"><br>
-      <h4>Contato de Emergência 1</h4>
-      <label>Nome:</label> <input type="text" id="nome_emergencia1"><br>
-      <label>Telefone:</label> <input type="text" id="tel_emergencia1"><br>
-      <label>Parentesco:</label> <input type="text" id="parentesco_emergencia1"><br>
-      <h4>Contato de Emergência 2</h4>
-      <label>Nome:</label> <input type="text" id="nome_emergencia2"><br>
-      <label>Telefone:</label> <input type="text" id="tel_emergencia2"><br>
-      <label>Parentesco:</label> <input type="text" id="parentesco_emergencia2"><br>
       <button type="button" onclick="salvarEdicao()">💾 Salvar</button>
       <button type="button" onclick="fecharModal()">❌ Fechar</button>
     </form>
   </div>
 </div>
 
+<!-- Modal Novo -->
+<div id="modal-novo">
+  <div class="modal-content">
+    <h3>Novo Contato</h3>
+    <form id="form-novo">
+      <label>RA:</label><input type="text" id="novo_ra"><br>
+      <label>Email Ismart:</label><input type="email" id="novo_email_ismart"><br>
+      <label>Email Pessoal:</label><input type="email" id="novo_email_pessoal"><br>
+      <label>Celular:</label><input type="text" id="novo_celular"><br>
+      <button type="button" onclick="salvarNovo()">💾 Salvar</button>
+      <button type="button" onclick="fecharModalNovo()">❌ Fechar</button>
+    </form>
+  </div>
+</div>
+
 <script>
+// --- Modal de Edição ---
 function abrirModal(el) {
   const contato = typeof el === 'object' && el.dataset 
       ? JSON.parse(el.dataset.contato)
-      : el; // se vier do AJAX, já é o objeto puro
+      : el;
 
   for (const campo in contato) {
     const input = document.getElementById(campo);
@@ -133,10 +138,41 @@ async function salvarEdicao() {
   const json = await res.json();
   if (json.status === 'ok') {
     alert('✅ Contato atualizado com sucesso!');
-    fecharModal();
-    buscarServidor(document.getElementById('campo-busca').value);
+    setTimeout(() => window.location.reload(), 500);
   } else {
     alert('❌ Erro ao salvar alteração.');
+  }
+}
+
+// --- Modal de Novo Registro ---
+function abrirModalNovo() {
+  document.getElementById('modal-novo').style.display = 'flex';
+}
+
+function fecharModalNovo() {
+  document.getElementById('modal-novo').style.display = 'none';
+}
+
+async function salvarNovo() {
+  const data = {
+    ra: document.getElementById('novo_ra').value,
+    email_ismart: document.getElementById('novo_email_ismart').value,
+    email_pessoal: document.getElementById('novo_email_pessoal').value,
+    celular: document.getElementById('novo_celular').value
+  };
+
+  const res = await fetch('/contato_aluno/add_ajax', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+
+  const json = await res.json();
+  if (json.status === 'ok') {
+    alert('✅ Contato adicionado com sucesso!');
+    setTimeout(() => window.location.reload(), 500);
+  } else {
+    alert('❌ Erro ao adicionar contato.');
   }
 }
 
@@ -174,7 +210,6 @@ async function buscarServidor(termo) {
           <td>${c.celular}</td>
           <td>${c.last_modified_by ?? '-'}</td>
           <td>${c.ValidFrom}</td>
-
           <td><a href="#" class="botao" onclick='abrirModal(${JSON.stringify(c)})'>Editar</a></td>
         `;
         corpo.appendChild(row);
