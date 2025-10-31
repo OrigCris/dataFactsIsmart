@@ -40,7 +40,14 @@
 <table id="tabela-contatos">
   <thead>
     <tr>
-      <th>ID</th><th>RA</th><th>Email Ismart</th><th>Email Pessoal</th><th>Celular</th><th>Ações</th>
+      <th>ID</th>
+      <th>RA</th>
+      <th>Email Ismart</th>
+      <th>Email Pessoal</th>
+      <th>Celular</th>
+      <th>Modificado por</th>
+      <th>Última modificação</th>
+      <th>Ações</th>
     </tr>
   </thead>
   <tbody id="corpo-tabela">
@@ -51,6 +58,8 @@
       <td>{{ c.email_ismart }}</td>
       <td>{{ c.email_pessoal }}</td>
       <td>{{ c.celular }}</td>
+      <td>{{ c.last_modified_by or '-' }}</td>
+      <td>{{ c.ValidFrom}}</td>
       <td>
         <a href="#" class="botao" 
         data-contato='{{ c | tojson | safe }}'
@@ -163,6 +172,9 @@ async function buscarServidor(termo) {
           <td>${c.email_ismart}</td>
           <td>${c.email_pessoal}</td>
           <td>${c.celular}</td>
+          <td>${c.last_modified_by ?? '-'}</td>
+          <td>${c.ValidFrom}</td>
+
           <td><a href="#" class="botao" onclick='abrirModal(${JSON.stringify(c)})'>Editar</a></td>
         `;
         corpo.appendChild(row);

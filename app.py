@@ -105,7 +105,9 @@ def listar_contatos():
             parentesco_emergencia1,
             nome_emergencia2,
             tel_emergencia2,
-            parentesco_emergencia2
+            parentesco_emergencia2,
+            last_modified_by,
+            ValidFrom
         FROM dbo.data_facts_ismart_contato_aluno_v2
         ORDER BY id_contato_aluno ASC
     """)
@@ -190,7 +192,9 @@ def buscar_contatos():
                 parentesco_emergencia1,
                 nome_emergencia2,
                 tel_emergencia2,
-                parentesco_emergencia2
+                parentesco_emergencia2,
+                last_modified_by,
+                ValidFrom
             FROM dbo.data_facts_ismart_contato_aluno_v2
             ORDER BY id_contato_aluno ASC
         """)
@@ -211,16 +215,19 @@ def buscar_contatos():
                 parentesco_emergencia1,
                 nome_emergencia2,
                 tel_emergencia2,
-                parentesco_emergencia2
+                parentesco_emergencia2,
+                last_modified_by,
+                ValidFrom
             FROM dbo.data_facts_ismart_contato_aluno_v2
             WHERE ra LIKE %s
                OR email_ismart LIKE %s
                OR email_pessoal LIKE %s
-               OR celular LIKE %s
+               OR celular LIKE %
+               OR last_modified_by LIKE %s
             ORDER BY id_contato_aluno ASC
         """
         like = f"%{termo}%"
-        cursor.execute(query, (like, like, like, like))
+        cursor.execute(query, (like, like, like, like, like))
 
     contatos = cursor.fetchall()
     conn.close()
