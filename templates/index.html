@@ -98,7 +98,12 @@
   <div class="grid">
     {% for tabela in tabelas %}
     <div class="card">
-      <div class="icon">🗂️</div>
+      <div class="icon">
+        {% if tabela.descricao == "Contatos dos alunos" %}📞
+        {% elif tabela.descricao == "Endereço dos alunos" %}📍
+        {% elif tabela.descricao == "Ficha dos alunos" %}📋
+        {% else %}🗂️{% endif %}
+      </div>
       <a href="/{{ tabela.nome }}">{{ tabela.descricao }}</a>
     </div>
     {% endfor %}
