@@ -64,7 +64,9 @@
       <td>{{ c.last_modified_by or '-' }}</td>
       <td>{{ c.ValidFrom }}</td>
       <td>
-        <a href="#" class="botao" data-contato='{{ c | tojson | safe }}' onclick="abrirModal(this)">Editar</a>
+        <a href="#" class="botao" 
+           data-contato='{{ c | tojson | safe }}'
+           onclick="abrirModal(this)">Editar</a>
       </td>
     </tr>
     {% endfor %}
@@ -83,21 +85,45 @@
       <label>Email Ismart:</label> <input type="email" id="email_ismart"><br>
       <label>Email Pessoal:</label> <input type="email" id="email_pessoal"><br>
       <label>Celular:</label> <input type="text" id="celular"><br>
+      <label>Telefone Fixo:</label> <input type="text" id="telefone_fixo"><br>
+      <label>LinkedIn:</label> <input type="text" id="linkedin"><br>
+      <label>Facebook:</label> <input type="text" id="facebook"><br>
+      <label>Instagram:</label> <input type="text" id="instagram"><br>
+      <h4>Contato de Emergência 1</h4>
+      <label>Nome:</label> <input type="text" id="nome_emergencia1"><br>
+      <label>Telefone:</label> <input type="text" id="tel_emergencia1"><br>
+      <label>Parentesco:</label> <input type="text" id="parentesco_emergencia1"><br>
+      <h4>Contato de Emergência 2</h4>
+      <label>Nome:</label> <input type="text" id="nome_emergencia2"><br>
+      <label>Telefone:</label> <input type="text" id="tel_emergencia2"><br>
+      <label>Parentesco:</label> <input type="text" id="parentesco_emergencia2"><br>
       <button type="button" onclick="salvarEdicao()">💾 Salvar</button>
       <button type="button" onclick="fecharModal()">❌ Fechar</button>
     </form>
   </div>
 </div>
 
-<!-- Modal Novo -->
+<!-- Modal Novo Registro (Completo) -->
 <div id="modal-novo">
   <div class="modal-content">
     <h3>Novo Contato</h3>
     <form id="form-novo">
-      <label>RA:</label><input type="text" id="novo_ra"><br>
-      <label>Email Ismart:</label><input type="email" id="novo_email_ismart"><br>
-      <label>Email Pessoal:</label><input type="email" id="novo_email_pessoal"><br>
-      <label>Celular:</label><input type="text" id="novo_celular"><br>
+      <label>RA:</label> <input type="text" id="novo_ra"><br>
+      <label>Email Ismart:</label> <input type="email" id="novo_email_ismart"><br>
+      <label>Email Pessoal:</label> <input type="email" id="novo_email_pessoal"><br>
+      <label>Celular:</label> <input type="text" id="novo_celular"><br>
+      <label>Telefone Fixo:</label> <input type="text" id="novo_telefone_fixo"><br>
+      <label>LinkedIn:</label> <input type="text" id="novo_linkedin"><br>
+      <label>Facebook:</label> <input type="text" id="novo_facebook"><br>
+      <label>Instagram:</label> <input type="text" id="novo_instagram"><br>
+      <h4>Contato de Emergência 1</h4>
+      <label>Nome:</label> <input type="text" id="novo_nome_emergencia1"><br>
+      <label>Telefone:</label> <input type="text" id="novo_tel_emergencia1"><br>
+      <label>Parentesco:</label> <input type="text" id="novo_parentesco_emergencia1"><br>
+      <h4>Contato de Emergência 2</h4>
+      <label>Nome:</label> <input type="text" id="novo_nome_emergencia2"><br>
+      <label>Telefone:</label> <input type="text" id="novo_tel_emergencia2"><br>
+      <label>Parentesco:</label> <input type="text" id="novo_parentesco_emergencia2"><br>
       <button type="button" onclick="salvarNovo()">💾 Salvar</button>
       <button type="button" onclick="fecharModalNovo()">❌ Fechar</button>
     </form>
@@ -105,36 +131,39 @@
 </div>
 
 <script>
-// --- Modal de Edição ---
+// --- Abrir/Fechar Modais ---
 function abrirModal(el) {
   const contato = typeof el === 'object' && el.dataset 
       ? JSON.parse(el.dataset.contato)
       : el;
-
   for (const campo in contato) {
     const input = document.getElementById(campo);
     if (input) input.value = contato[campo] || '';
   }
   document.getElementById('modal').style.display = 'flex';
 }
-
 function fecharModal() {
   document.getElementById('modal').style.display = 'none';
 }
+function abrirModalNovo() {
+  document.getElementById('modal-novo').style.display = 'flex';
+}
+function fecharModalNovo() {
+  document.getElementById('modal-novo').style.display = 'none';
+}
 
+// --- Salvar Edição ---
 async function salvarEdicao() {
   const id = document.getElementById('id_contato_aluno').value;
   const data = {};
   document.querySelectorAll('#form-editar input').forEach(el => {
     data[el.id] = el.value;
   });
-
   const res = await fetch(`/contato_aluno/update_ajax/${id}`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(data)
   });
-
   const json = await res.json();
   if (json.status === 'ok') {
     alert('✅ Contato atualizado com sucesso!');
@@ -144,29 +173,23 @@ async function salvarEdicao() {
   }
 }
 
-// --- Modal de Novo Registro ---
-function abrirModalNovo() {
-  document.getElementById('modal-novo').style.display = 'flex';
-}
-
-function fecharModalNovo() {
-  document.getElementById('modal-novo').style.display = 'none';
-}
-
+// --- Salvar Novo ---
 async function salvarNovo() {
-  const data = {
-    ra: document.getElementById('novo_ra').value,
-    email_ismart: document.getElementById('novo_email_ismart').value,
-    email_pessoal: document.getElementById('novo_email_pessoal').value,
-    celular: document.getElementById('novo_celular').value
-  };
-
+  const campos = [
+    'ra','email_ismart','email_pessoal','celular','telefone_fixo',
+    'linkedin','facebook','instagram','nome_emergencia1','tel_emergencia1',
+    'parentesco_emergencia1','nome_emergencia2','tel_emergencia2','parentesco_emergencia2'
+  ];
+  const data = {};
+  campos.forEach(c => {
+    const el = document.getElementById(`novo_${c}`);
+    data[c] = el ? el.value : null;
+  });
   const res = await fetch('/contato_aluno/add_ajax', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(data)
   });
-
   const json = await res.json();
   if (json.status === 'ok') {
     alert('✅ Contato adicionado com sucesso!');
@@ -183,7 +206,6 @@ document.getElementById('campo-busca').addEventListener('input', function() {
   const termo = this.value.trim();
   debounceTimer = setTimeout(() => buscarServidor(termo), 300);
 });
-
 async function buscarServidor(termo) {
   const corpo = document.getElementById('corpo-tabela');
   const loading = document.getElementById('loading');
@@ -191,11 +213,9 @@ async function buscarServidor(termo) {
   loading.style.display = 'block';
   msg.innerText = '';
   corpo.innerHTML = '';
-
   try {
     const res = await fetch(`/contato_aluno/search?q=${encodeURIComponent(termo)}`);
     const contatos = await res.json();
-
     if (contatos.length === 0) {
       msg.innerText = 'Nenhum resultado encontrado.';
     } else {
@@ -222,6 +242,5 @@ async function buscarServidor(termo) {
   }
 }
 </script>
-
 </body>
 </html>
