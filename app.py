@@ -108,7 +108,7 @@ def listar_contatos():
             parentesco_emergencia2,
             last_modified_by,
             ValidFrom
-        FROM dbo.data_facts_ismart_contato_aluno_v2
+        FROM dbo.vw_contato_aluno_br
         ORDER BY id_contato_aluno ASC
     """)
     contatos = cursor.fetchall()
@@ -195,7 +195,7 @@ def buscar_contatos():
                 parentesco_emergencia2,
                 last_modified_by,
                 ValidFrom
-            FROM dbo.data_facts_ismart_contato_aluno_v2
+            FROM dbo.vw_contato_aluno_br
             ORDER BY id_contato_aluno ASC
         """)
     else:
@@ -218,7 +218,7 @@ def buscar_contatos():
                 parentesco_emergencia2,
                 last_modified_by,
                 ValidFrom
-            FROM dbo.data_facts_ismart_contato_aluno_v2
+            FROM dbo.vw_contato_aluno_br
             WHERE ra LIKE %s
                OR email_ismart LIKE %s
                OR email_pessoal LIKE %s
