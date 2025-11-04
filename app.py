@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from datetime import datetime, timedelta
 from functools import wraps
 import pymssql
-import logging
 
 app = Flask(__name__)
 app.secret_key = "super-secret"  # ⚠️ Trocar em produção
@@ -257,5 +256,4 @@ def api_update(ra, tipo):
 # 🚀 Inicialização
 # ======================================================
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s - %(message)s')
     app.run(debug=True)
