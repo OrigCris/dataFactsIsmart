@@ -1,121 +1,79 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Painel Admin - Ismart</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+{% extends "layout.html" %}
+{% block content %}
+<h2>📋 Lista de Alunos</h2>
+<p>Busque por RA ou nome — ou veja os 100 primeiros registros.</p>
 
-    header {
-      background: #004aad;
-      color: white;
-      width: 100%;
-      text-align: center;
-      padding: 30px 0;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
+<div style="margin-bottom: 15px;">
+  <input type="text" id="campo-busca" placeholder="Digite para buscar..."
+         style="width:50%;padding:8px;border-radius:6px;border:1px solid #ccc;">
+  <span id="status-busca" style="margin-left:10px;color:#555;font-style:italic;"></span>
+</div>
 
-    header h1 {
-      margin: 0;
-      font-size: 2em;
-    }
-
-    main {
-      margin-top: 40px;
-      width: 90%;
-      max-width: 1000px;
-      text-align: center;
-    }
-
-    .descricao {
-      font-size: 1.1em;
-      color: #333;
-      margin-bottom: 25px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 25px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-      transition: all 0.25s ease-in-out;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-    }
-
-    .card a {
-      text-decoration: none;
-      color: #004aad;
-      font-size: 1.2em;
-      font-weight: bold;
-    }
-
-    .card a:hover {
-      color: #002b67;
-    }
-
-    footer {
-      margin-top: auto;
-      padding: 15px;
-      color: #666;
-      font-size: 0.9em;
-    }
-
-    .icon {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-      color: #004aad;
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <h1>📊 Painel de Administração Ismart</h1>
-  <div style="position:absolute; top:20px; right:20px; color:white;">
-    👤 {{ session['usuario'] }} | <a href="/logout" style="color:white; text-decoration:none;">🚪 Sair</a>
-  </div>
-</header>
-
-<main>
-  <p class="descricao">Selecione uma tabela para gerenciar os dados do sistema:</p>
-  
-  <div class="grid">
-    {% for tabela in tabelas %}
-    <div class="card">
-      <div class="icon">
-        {% if tabela.descricao == "Contatos dos alunos" %}📞
-        {% elif tabela.descricao == "Endereço dos alunos" %}📍
-        {% elif tabela.descricao == "Ficha dos alunos" %}📋
-        {% else %}🗂️{% endif %}
-      </div>
-      <a href="/{{ tabela.nome }}">{{ tabela.descricao }}</a>
-    </div>
+<table id="tabela-ra">
+  <thead>
+    <tr>
+      <th>RA</th>
+      <th>Nome</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="corpo-tabela">
+    {% for c in alunos %}
+    <tr id="row-{{ c.ra }}">
+      <td>{{ c.ra }}</td>
+      <td>{{ c.nome or '-' }}</td>
+      <td><a class="botao" href="{{ url_for('aluno_detalhe', ra=c.ra) }}">👁️ Ver perfil</a></td>
+    </tr>
     {% endfor %}
-  </div>
-</main>
+  </tbody>
+</table>
 
-<footer>
-  © {{ current_year }} Ismart - Sistema de Administração de Dados
-</footer>
+<script>
+let debounceTimer;
+const campoBusca = document.getElementById('campo-busca');
+const statusBusca = document.getElementById('status-busca');
 
-</body>
-</html>
+campoBusca.addEventListener('input', function(){
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => buscar(this.value.trim()), 400);
+});
+
+async function buscar(termo) {
+  statusBusca.textContent = '⏳ Buscando...';
+  const res = await fetch(`/buscar?q=${encodeURIComponent(termo)}`, {
+    headers: { 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest' },
+    cache: 'no-store'
+  });
+
+  if (res.status === 401) {
+    statusBusca.textContent = '⚠️ Sessão expirada. Redirecionando...';
+    setTimeout(() => window.location.href = '/login', 1200);
+    return;
+  }
+
+  const ctype = res.headers.get('content-type') || '';
+  if (!ctype.includes('application/json')) {
+    statusBusca.textContent = '❌ Erro inesperado (resposta não-JSON).';
+    console.error(await res.text());
+    return;
+  }
+
+  const alunos = await res.json();
+  const tbody = document.getElementById('corpo-tabela');
+  tbody.innerHTML = '';
+  alunos.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${a.ra}</td>
+      <td>${a.nome || '-'}</td>
+      <td><a class="botao" href="/aluno/${a.ra}">👁️ Ver perfil</a></td>`;
+    tbody.appendChild(tr);
+  });
+
+  statusBusca.textContent =
+    alunos.length === 0 ? '⚠️ Nenhum resultado'
+    : alunos.length === 1 ? '✅ 1 registro'
+    : `✅ ${alunos.length} registros`;
+}
+</script>
+{% endblock %}

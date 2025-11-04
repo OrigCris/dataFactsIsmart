@@ -1,0 +1,47 @@
+/* RESET */
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* BASE */
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f4f6fb;display:flex;flex-direction:column;min-height:100vh}
+header{background:#004aad;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:15px 40px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+header h1{font-size:1.6em;font-weight:600;display:flex;align-items:center;gap:10px}
+header h1::before{content:"📊";font-size:1.5em}
+.user-info{font-size:.95em}
+.user-info a{color:#fff;text-decoration:none;font-weight:500;margin-left:8px}
+.user-info a:hover{text-decoration:underline}
+main{flex:1;padding:40px;max-width:1100px;width:100%;margin:0 auto;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-top:40px}
+footer{background:#f0f2f7;color:#666;text-align:center;padding:15px 0;font-size:.9em;margin-top:auto;border-top:1px solid #d8dee9}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden}
+th,td{padding:12px 15px;text-align:left}
+th{background:#004aad;color:#fff;font-weight:600}
+tr:nth-child(even){background:#f3f7ff}
+tr:hover{background:#e8f0fe;transition:background .2s}
+a.botao{text-decoration:none;color:#004aad;font-weight:bold}
+a.botao:hover{color:#002b67}
+
+/* TABS */
+.tabs{display:flex;gap:10px;margin-bottom:16px}
+.tab-btn{background:#e9efff;border:1px solid #cfd9ff;color:#1247b9;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.tab-btn.active{background:#004aad;color:#fff;border-color:#004aad}
+.tab-content.card{background:#fff;border:1px solid #e7eaf0;border-radius:10px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+
+/* FORMS */
+label{display:block;margin-top:10px;font-weight:500;color:#333}
+input{width:100%;padding:8px;margin-top:5px;border:1px solid #ccc;border-radius:6px}
+input:focus{border-color:#004aad;outline:none;box-shadow:0 0 3px rgba(0,74,173,.35);transition:.2s}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+fieldset{border:1px solid #e1e4ea;border-radius:8px;margin-top:10px;padding:10px}
+legend{padding:0 6px;color:#004aad;font-weight:600}
+.actions{margin-top:16px}
+button.salvar{background:#004aad;color:#fff;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700}
+button.salvar:hover{background:#00357a}
+.muted{color:#666;font-size:.9em;margin-top:8px}
+
+/* RESPONSIVO */
+@media (max-width: 768px){
+  main{padding:20px}
+  .grid-2{grid-template-columns:1fr}
+  table th, table td{font-size:.9em;padding:10px}
+}
