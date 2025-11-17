@@ -5,10 +5,10 @@ import os
 def get_connection():
     if 'conn' not in g:
         g.conn = pymssql.connect(
-            server=os.getenv('DB_SERVER'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASS'),
-            database=os.getenv('DB_NAME'),
+            server='ismart-sql-server.database.windows.net',
+            user='ismart',
+            password='Adminsmart!',
+            database='dev-ismart-sql-db',
             port=1433
         )
     return g.conn

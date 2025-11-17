@@ -12,7 +12,7 @@ def create_app():
                 static_folder='static',
                 template_folder='templates')
 
-    app.secret_key = os.getenv('SECRET_KEY', 'dev-secret')
+    app.secret_key = 'super-secret'
     app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 min
 
     # Logging
