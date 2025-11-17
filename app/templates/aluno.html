@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>👤 Perfil do Aluno — RA {{ ra }}</h2>
+
+<div class="tabs">
+  <button class="tab-btn active" data-aba="contato">Contato</button>
+  <button class="tab-btn" data-aba="endereco">Endereço</button>
+  <button class="tab-btn" data-aba="curso">Curso</button>
+  <button class="tab-btn" data-aba="status">Status</button>
+  <button class="tab-btn" data-aba="alteracao_status">Alteração Status</button>
+</div>
+
+<div id="conteudo-aba" class="tab-content card"></div>
+
+<div class="mt-16">
+  <a class="botao" href="{{ url_for('alunos.home') }}">⬅️ Voltar à lista</a>
+</div>
+
+<script>
+  window.RA_ATUAL = "{{ ra }}";
+</script>
+<script src="{{ url_for('static', filename='js/aluno.js') }}"></script>
+{% endblock %}

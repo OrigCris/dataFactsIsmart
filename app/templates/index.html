@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>📋 Lista de Alunos</h2>
+<p>Busque por RA ou nome — ou veja os 100 primeiros registros.</p>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+  <div>
+    <input type="text" id="campo-busca" placeholder="Digite para buscar..."
+           style="width:300px;padding:8px;border-radius:6px;border:1px solid #ccc;">
+    <span id="status-busca" style="margin-left:10px;color:#555;font-style:italic;"></span>
+  </div>
+  <a href="{{ url_for('alunos.novo_aluno') }}" class="botao" style="background:#004aad;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;">
+    ➕ Novo Aluno
+  </a>
+</div>
+
+<table id="tabela-ra">
+  <thead>
+    <tr>
+      <th>RA</th>
+      <th>Nome</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="corpo-tabela">
+    {% for c in alunos %}
+    <tr id="row-{{ c.ra }}">
+      <td>{{ c.ra }}</td>
+      <td>{{ c.nome or '-' }}</td>
+      <td><a class="botao" href="{{ url_for('alunos.aluno_detalhe', ra=c.ra) }}">👁️ Ver perfil</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script src="{{ url_for('static', filename='js/geral.js') }}"></script>
+<script src="{{ url_for('static', filename='js/index_busca.js') }}"></script>
+{% endblock %}

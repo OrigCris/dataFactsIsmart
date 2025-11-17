@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>➕ Novo Aluno</h2>
+
+<!-- 
+  IMPORTANTE:
+  • Trocamos <form> por <div> para evitar POST automático.
+  • A criação é 100% controlada via novo_aluno.js.
+-->
+
+<div id="form-novo" class="card" style="padding:20px; max-width:600px; margin:auto;">
+
+  <h3>📋 Informações Básicas</h3>
+
+  <label for="ra">RA:</label>
+  <input type="text" id="ra" required placeholder="Digite o RA do aluno">
+
+  <h3>📞 Contato</h3>
+
+  <label for="email">Email:</label>
+  <input id="email">
+
+  <label for="celular">Celular:</label>
+  <input id="celular">
+
+  <label for="telefone_fixo">Telefone Fixo:</label>
+  <input id="telefone_fixo">
+
+  <label for="linkedin">LinkedIn:</label>
+  <input id="linkedin">
+
+  <h3>🚨 Contato de Emergência 1</h3>
+
+  <label for="nome_emergencia_1">Nome:</label>
+  <input id="nome_emergencia_1">
+
+  <label for="tel_emergencia_1">Telefone:</label>
+  <input id="tel_emergencia_1">
+
+  <label for="parentesco_emergencia_1">Parentesco:</label>
+  <input id="parentesco_emergencia_1">
+
+  <h3>🏠 Endereço</h3>
+
+  <label for="rua">Rua:</label>
+  <input id="rua">
+
+  <label for="numero">Número:</label>
+  <input id="numero">
+
+  <label for="complemento">Complemento:</label>
+  <input id="complemento">
+
+  <label for="cep">CEP:</label>
+  <input id="cep" placeholder="00000-000">
+
+  <label for="bairro">Bairro:</label>
+  <input id="bairro">
+
+  <div style="margin-top:30px; display:flex; justify-content:center; gap:15px;">
+    <button type="button" class="salvar" id="btn-criar">💾 Criar Aluno</button>
+    <a href="{{ url_for('alunos.home') }}" class="cancelar-btn">↩️ Cancelar</a>
+  </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/novo_aluno.js') }}"></script>
+
+{% endblock %}
