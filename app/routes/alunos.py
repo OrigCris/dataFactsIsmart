@@ -17,7 +17,7 @@ def home():
     cursor.execute('''
         SELECT TOP 100 
             ra, UPPER(nome) AS nome
-        FROM dbo.data_facts_ismart_aluno_complemento
+        FROM dbo.data_facts_ismart_aluno_complemento_v2
         ORDER BY ra ASC
     ''')
     alunos = cursor.fetchall()
@@ -38,7 +38,7 @@ def buscar():
     query_base = '''
         SELECT TOP 100 
             ra, UPPER(nome) AS nome
-        FROM dbo.data_facts_ismart_aluno_complemento
+        FROM dbo.data_facts_ismart_aluno_complemento_v2
     '''
 
     if termo:
@@ -64,65 +64,6 @@ def aluno_detalhe(ra):
         current_year=datetime.now().year
     )
 
-@bp_alunos.route('/aluno/novo')
-@login_requerido
-def novo_aluno():
-    return render_template(
-        'novo_aluno.html',
-        usuario=session['usuario'],
-        current_year=datetime.now().year
-    )
-
-# ============================================================
-# CRIAR NOVO ALUNO
-# ============================================================
-
-@bp_alunos.route('/api/aluno/create', methods=['POST'])
-@login_requerido
-def criar_aluno():
-    data = request.get_json() or {}
-    usuario = session.get('usuario')
-
-    ra = data.get('ra')
-    if not ra:
-        return jsonify({'msg': 'RA é obrigatório.'}), 400
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute('SELECT 1 FROM dbo.data_facts_ismart_contato_aluno_v2 WHERE ra = %s', (ra,))
-        if cursor.fetchone():
-            return jsonify({'msg': 'RA já existente.'}), 400
-
-        cursor.execute('''
-            INSERT INTO dbo.data_facts_ismart_contato_aluno_v2 
-            (ra, email, celular, telefone_fixo, linkedin,
-             nome_emergencia_1, tel_emergencia_1, parentesco_emergencia_1,
-             nome_emergencia_2, tel_emergencia_2, parentesco_emergencia_2, last_modified_by)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            ra, data.get('email'), data.get('celular'), data.get('telefone_fixo'), data.get('linkedin'),
-            data.get('nome_emergencia_1'), data.get('tel_emergencia_1'), data.get('parentesco_emergencia_1'),
-            data.get('nome_emergencia_2'), data.get('tel_emergencia_2'), data.get('parentesco_emergencia_2'),
-            usuario
-        ))
-
-        cursor.execute('''
-            INSERT INTO dbo.data_facts_ismart_endereco_aluno_v2 
-            (ra, rua, numero, complemento, cep, bairro)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (
-            ra, data.get('rua'), data.get('numero'), data.get('complemento'),
-            data.get('cep'), data.get('bairro')
-        ))
-
-        conn.commit()
-        return jsonify({'msg': 'Aluno criado com sucesso!'})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'msg': f'Erro ao criar aluno: {e}'}), 500
-
 # ============================================================
 # API — RETORNAR TODOS OS DADOS DO ALUNO
 # ============================================================
@@ -132,6 +73,16 @@ def criar_aluno():
 def api_aluno_all(ra):
     conn = get_connection()
     cursor = conn.cursor(as_dict=True)
+
+    # ALUNO COMPLEMENTO
+    cursor.execute('''
+        select  
+            ra, id_raca, id_genero, nome, nome_social, pronome, nome_comunicacao, orientacao_sexual, tamanho_camiseta,
+            last_modified_by, ValidFrom
+        from data_facts_ismart_aluno_complemento_v2
+        WHERE ra = %s
+    ''', (ra,))
+    aluno_complemento = cursor.fetchone() or {}
 
     # CONTATO
     cursor.execute('''
@@ -171,10 +122,12 @@ def api_aluno_all(ra):
             percentual_bolsa_faculdade,
             mensalidade_curso,
             turno_curso,
-            periodicidade_curso
+            periodicidade_curso,
+            last_modified_by, ValidFrom
             
-        FROM dbo.data_facts_es_informacoes_curso
+        FROM dbo.data_facts_es_informacoes_curso_v2
         WHERE ra = %s
+        order by id_informacoes_curso desc
         
     ''', (ra,))
     curso = cursor.fetchone() or {}
@@ -202,7 +155,8 @@ def api_aluno_all(ra):
         'endereco': endereco,
         'curso': curso,
         'status': status,
-        'alteracao_status': alteracao_status
+        'alteracao_status': alteracao_status,
+        'aluno_complemento': aluno_complemento
     })
 
 # ============================================================
@@ -317,15 +271,15 @@ def api_insert_curso(ra):
     cursor = conn.cursor()
 
     try:
-        placeholders = ", ".join(["%s"] * (len(campos) + 1))
+        placeholders = ", ".join(["%s"] * (len(campos) + 2))
 
         cursor.execute(
             f"""
-            INSERT INTO dbo.data_facts_es_informacoes_curso
-            ({', '.join(campos)}, ra)
+            INSERT INTO dbo.data_facts_es_informacoes_curso_v2
+            ({', '.join(campos)}, last_modified_by, ra)
             VALUES ({placeholders})
             """,
-            tuple(valores) + (ra,)
+            tuple(valores) + (usuario, ra,)
         )
 
         conn.commit()
@@ -338,24 +292,71 @@ def api_insert_curso(ra):
 # CURSO — UPDATE (somente o último registro!)
 # ============================================================
 
-@bp_alunos.route('/api/aluno/<ra>/curso/update', methods=['POST'])
+# @bp_alunos.route('/api/aluno/<ra>/curso/update', methods=['POST'])
+# @login_requerido
+# def api_update_curso(ra):
+#     data = request.get_json() or {}
+#     usuario = session.get("usuario")
+
+#     campos = [
+#         "id_localidade_cursos", "id_cursos_instituicoes", "id_tempo",
+#         "fonte_atualizacao", "observacao_atualizacao",
+#         "data_inicio_curso", "data_prevista_termino_curso", "data_termino_real",
+#         "ano_cursado_previsto", "percentual_bolsa_faculdade",
+#         "mensalidade_curso", "turno_curso", "periodicidade_curso"
+#     ]
+
+#     alteracoes = {k: v for k, v in data.items() if k in campos}
+#     if not alteracoes:
+#         return jsonify({"msg": "Nada para atualizar."}), 400
+
+#     sets = ", ".join([f"{k} = %s" for k in alteracoes.keys()])
+#     valores = tuple(alteracoes.values()) + (usuario, ra)
+
+#     conn = get_connection()
+#     cursor = conn.cursor()
+
+#     try:
+#         cursor.execute(
+#             f"""
+#             UPDATE dbo.data_facts_es_informacoes_curso_v2
+#             SET {sets}, last_modified_by = %s
+#             WHERE ra = %s
+#             AND id_informacoes_curso = (
+#                 SELECT MAX(id_informacoes_curso)
+#                 FROM dbo.data_facts_es_informacoes_curso_v2
+#                 WHERE ra = %s
+#             )
+#             """,
+#             valores + (ra,)
+#         )
+
+#         if cursor.rowcount == 0:
+#             return jsonify({"msg": "Nenhum curso encontrado para atualizar."}), 404
+
+#         conn.commit()
+#         return jsonify({"msg": "Curso atualizado com sucesso!"})
+
+#     except Exception as e:
+#         conn.rollback()
+#         return jsonify({"msg": f"Erro ao atualizar curso: {e}"}), 500
+
+# ============================================================
+# Aluno Complemento — UPDATE
+# ============================================================
+
+@bp_alunos.route('/api/aluno/<ra>/aluno_cmp/update', methods=['POST'])
 @login_requerido
-def api_update_curso(ra):
+def api_update_aluno_cmp(ra):
     data = request.get_json() or {}
     usuario = session.get("usuario")
 
     campos = [
-        "id_localidade_cursos", "id_cursos_instituicoes", "id_tempo",
-        "fonte_atualizacao", "observacao_atualizacao",
-        "data_inicio_curso", "data_prevista_termino_curso", "data_termino_real",
-        "ano_cursado_previsto", "percentual_bolsa_faculdade",
-        "mensalidade_curso", "turno_curso", "periodicidade_curso"
+        "id_raca", "id_genero", "nome","nome_social", "pronome",
+        "nome_comunicacao", "orientacao_sexual", "tamanho_camiseta"
     ]
 
     alteracoes = {k: v for k, v in data.items() if k in campos}
-    if not alteracoes:
-        return jsonify({"msg": "Nada para atualizar."}), 400
-
     sets = ", ".join([f"{k} = %s" for k in alteracoes.keys()])
     valores = tuple(alteracoes.values()) + (usuario, ra)
 
@@ -365,27 +366,19 @@ def api_update_curso(ra):
     try:
         cursor.execute(
             f"""
-            UPDATE dbo.data_facts_es_informacoes_curso
+            UPDATE dbo.data_facts_ismart_aluno_complemento_v2
             SET {sets}, last_modified_by = %s
             WHERE ra = %s
-            AND ValidFrom = (
-                SELECT MAX(ValidFrom)
-                FROM dbo.data_facts_es_informacoes_curso
-                WHERE ra = %s
-            )
             """,
             valores + (ra,)
         )
 
-        if cursor.rowcount == 0:
-            return jsonify({"msg": "Nenhum curso encontrado para atualizar."}), 404
-
         conn.commit()
-        return jsonify({"msg": "Curso atualizado com sucesso!"})
+        return jsonify({"msg": "Aluno atualizado com sucesso!"})
 
     except Exception as e:
         conn.rollback()
-        return jsonify({"msg": f"Erro ao atualizar curso: {e}"}), 500
+        return jsonify({"msg": f"Erro ao atualizar os dados do aluno: {e}"}), 500
 
 # ============================================================
 # STATUS — UPDATE
@@ -457,3 +450,48 @@ def api_insert_alteracao_status(ra):
     except Exception as e:
         conn.rollback()
         return jsonify({"msg": f"Erro ao inserir alteração: {e}"}), 500
+    
+
+# NOVAS ROTAS TABELA AUX
+
+@bp_alunos.route("/api/curso/tabelas")
+@login_requerido
+def curso_tabelas():
+
+    conn = get_connection()
+    cursor = conn.cursor(as_dict=True)
+
+    # Localidades
+    cursor.execute("""
+        SELECT id_localidade_cursos, cidade, estado, pais
+        FROM data_facts_ismart_localidade_cursos
+        ORDER BY cidade
+    """)
+    localidades = cursor.fetchall()
+
+    # Cursos + instituições
+    cursor.execute("""
+        SELECT id_cursos_instituicoes, nome_curso, instituicao
+        FROM ismart_cursos_instituicoes
+        ORDER BY nome_curso
+    """)
+    cursos = cursor.fetchall()
+
+     # Cursos + instituições
+    cursor.execute("""
+        select * from ismart_raca
+    """)
+    raca = cursor.fetchall()
+
+     # Cursos + instituições
+    cursor.execute("""
+        select * from ismart_genero
+    """)
+    genero = cursor.fetchall()
+
+    return jsonify({
+        "localidades": localidades,
+        "cursos": cursos,
+        "raca": raca,
+        "genero": genero
+    })
