@@ -278,8 +278,14 @@ function renderCurso(curso) {
         <label>Data Prevista Término</label>
         <input id="data_prevista_termino_curso" type="date" value="${isoToDateInput(curso.data_prevista_termino_curso)}">
 
+        <label>Data Término Real</label>
+        <input id="data_termino_real" type="date" value="${isoToDateInput(curso.data_termino_real)}">
+
         <label>Ano Cursado Previsto</label>
         <input id="ano_cursado_previsto" value="${sanitize(curso.ano_cursado_previsto)}">
+
+        <label>Possui bolsa?</label>
+        <input id="possui_bolsa_faculdade" value="${sanitize(curso.possui_bolsa_faculdade)}">
 
         <label>% Bolsa</label>
         <input id="percentual_bolsa_faculdade" type="number" min="0" max="100" value="${sanitize(curso.percentual_bolsa_faculdade)}">
@@ -415,9 +421,11 @@ async function salvarCurso() {
     // Datas
     data_inicio_curso: document.getElementById("data_inicio_curso").value,
     data_prevista_termino_curso: document.getElementById("data_prevista_termino_curso").value,
-
+    data_termino_real: document.getElementById("data_termino_real").value,
+    
     // Informações acadêmicas
     ano_cursado_previsto: document.getElementById("ano_cursado_previsto").value,
+    possui_bolsa_faculdade: document.getElementById("possui_bolsa_faculdade").value,
     percentual_bolsa_faculdade: document.getElementById("percentual_bolsa_faculdade").value,
     mensalidade_curso: document.getElementById("mensalidade_curso").value,
 
@@ -428,6 +436,7 @@ async function salvarCurso() {
 
   // Fonte sempre Front
   payload["fonte_atualizacao"] = "Front";
+  payload["informacoes_contrato"] = "0";
 
   const btn = document.querySelector('.salvar');
   const original = btn.innerHTML;

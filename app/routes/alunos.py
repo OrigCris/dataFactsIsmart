@@ -119,6 +119,7 @@ def api_aluno_all(ra):
             data_prevista_termino_curso,
             data_termino_real,
             ano_cursado_previsto,
+            possui_bolsa_faculdade,
             percentual_bolsa_faculdade,
             mensalidade_curso,
             turno_curso,
@@ -261,8 +262,8 @@ def api_insert_curso(ra):
         "id_localidade_cursos", "id_cursos_instituicoes", "id_tempo",
         "fonte_atualizacao", "observacao_atualizacao",
         "data_inicio_curso", "data_prevista_termino_curso", "data_termino_real",
-        "ano_cursado_previsto", "percentual_bolsa_faculdade",
-        "mensalidade_curso", "turno_curso", "periodicidade_curso"
+        "ano_cursado_previsto", "possui_bolsa_faculdade", "percentual_bolsa_faculdade",
+        "mensalidade_curso", "turno_curso", "periodicidade_curso", "informacoes_contrato"
     ]
 
     valores = [data.get(c) for c in campos]
