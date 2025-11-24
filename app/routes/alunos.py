@@ -103,11 +103,6 @@ def api_aluno_all(ra):
     ''', (ra,))
     endereco = cursor.fetchone() or {}
 
-    # Falta colocar aqui no código do curso
-    # last_modified_by,
-    # ValidFrom
-    # ORDER BY ValidFrom DESC
-    # CURSO
     cursor.execute('''
         SELECT TOP 1
             id_localidade_cursos,
@@ -128,21 +123,19 @@ def api_aluno_all(ra):
             
         FROM dbo.data_facts_es_informacoes_curso_v2
         WHERE ra = %s
-        order by id_informacoes_curso desc
+        order by id_tempo desc
         
     ''', (ra,))
     curso = cursor.fetchone() or {}
-
-    # ORDER BY ValidFrom DESC
-    # STATUS
+    
+    # STATUS ALUMNI
     cursor.execute('''
-        SELECT TOP 1 *
-        FROM dbo.alumni_status_anual
+        SELECT TOP 1 ra, id_status, last_modified_by, ValidFrom
+        FROM dbo.alumni_status_anual_v2
         WHERE ra = %s
     ''', (ra,))
     status = cursor.fetchone() or {}
 
-    # ORDER BY ValidFrom DESC
     # ALTERAÇÃO STATUS
     cursor.execute('''
         SELECT TOP 1 *
@@ -151,13 +144,23 @@ def api_aluno_all(ra):
     ''', (ra,))
     alteracao_status = cursor.fetchone() or {}
 
+    # STATUS MENSAL
+    cursor.execute('''
+        SELECT TOP 1 *
+        FROM dbo.ismart_status_mensal
+        WHERE ra = %s
+        ORDER BY ID_TEMPO DESC
+    ''', (ra,))
+    status_mensal = cursor.fetchone() or {}
+
     return jsonify({
         'contato': contato,
         'endereco': endereco,
         'curso': curso,
         'status': status,
         'alteracao_status': alteracao_status,
-        'aluno_complemento': aluno_complemento
+        'aluno_complemento': aluno_complemento,
+        'status_mensal': status_mensal
     })
 
 # ============================================================
@@ -400,14 +403,14 @@ def api_update_status(ra):
 
     try:
         cursor.execute("""
-            UPDATE dbo.alumni_status_anual
+            UPDATE dbo.alumni_status_anual_v2
             SET id_status = %s, last_modified_by = %s
             WHERE ra = %s
         """, (id_status, usuario, ra))
 
         if cursor.rowcount == 0:
             cursor.execute("""
-                INSERT INTO dbo.alumni_status_anual
+                INSERT INTO dbo.alumni_status_anual_v2
                 (id_status, ra, last_modified_by)
                 VALUES (%s, %s, %s)
             """, (id_status, ra, usuario))
@@ -490,9 +493,14 @@ def curso_tabelas():
     """)
     genero = cursor.fetchall()
 
+    cursor.execute("""
+        select * from ismart_status
+    """)
+    status_dp = cursor.fetchall()
     return jsonify({
         "localidades": localidades,
         "cursos": cursos,
         "raca": raca,
-        "genero": genero
+        "genero": genero,
+        "status_dp": status_dp
     })

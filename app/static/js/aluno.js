@@ -62,6 +62,7 @@ function abrirAba(tipo) {
   else if (tipo === 'endereco') render(tipo, dados.endereco || {});
   else if (tipo === 'curso') renderCurso(dados.curso || {});
   else if (tipo === 'status') renderStatus(dados.status || {});
+  else if (tipo === 'status_mensal') renderStatusMensal(dados.status_mensal || {});
   else if (tipo === 'aluno_complemento') renderAlunoComplemento(dados.aluno_complemento || {});
   else if (tipo === 'alteracao_status') renderAlteracaoStatus();
 }
@@ -392,9 +393,85 @@ function renderCurso(curso) {
   cursoSelect.addEventListener("change", atualizarInstituicoes);
 }
 
-// =========================
-// ATUALIZAR CURSO
-// =========================
+function renderStatus(aluno) {
+  const c = document.getElementById('conteudo-aba');
+
+  const status_dp = tabelas.status_dp;
+
+  c.innerHTML = `
+    <h3>📌 Status Anual</h3>
+
+    <label>Status</label>
+    <select id="id_status">
+      <option value="" ${!aluno.id_status ? "selected" : ""}>-- selecione --</option>
+      ${status_dp.map(g => `
+        <option value="${g.id_status}" 
+          ${String(aluno.id_status) === String(g.id_status) ? "selected" : ""}>
+          ${g.status}
+        </option>
+      `).join("")}
+    </select>
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarStatus()">💾 Salvar</button>
+    </div>
+
+    <p class="muted">Última alteração:
+      <b>${formatarDataBR(aluno.ValidFrom)}</b>
+      por <b>${sanitize(aluno.last_modified_by)}</b>
+    </p>
+  `;
+}
+
+function renderStatusMensal(aluno) {
+  const c = document.getElementById('conteudo-aba');
+
+  const status_dp = tabelas.status_dp;
+
+  c.innerHTML = `
+    <h3>📌 Status Mensal</h3>
+
+    <label>Status Mensal</label>
+    <select id="id_status">
+      <option value="" ${!aluno.id_status ? "selected" : ""}>-- selecione --</option>
+      ${status_dp.map(g => `
+        <option value="${g.id_status}" 
+          ${String(aluno.id_status) === String(g.id_status) ? "selected" : ""}>
+          ${g.status}
+        </option>
+      `).join("")}
+    </select>
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarStatusMensal()">💾 Salvar</button>
+    </div>
+
+    <p class="muted">Última alteração:
+      <b>${formatarDataBR(aluno.ValidFrom)}</b>
+      por <b>${sanitize(aluno.last_modified_by)}</b>
+    </p>
+  `;
+}
+
+function renderAlteracaoStatus() {
+  const c = document.getElementById('conteudo-aba');
+
+  c.innerHTML = `
+    <h3>📝 Registrar Alteração de Status</h3>
+
+    <div>
+      <label>Observação</label>
+      <input id="observacao">
+      
+      <label>Data da Alteração</label>
+      <input id="data_alteracao" type="date">
+    </div>
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarAlteracaoStatus()">💾 Salvar</button>
+    </div>
+  `;
+}
 
 async function salvarCurso() {
   const cidade = document.getElementById("cidade_select").value;
@@ -520,52 +597,6 @@ async function atualizarCurso() {
   }
 }
 
-function renderStatus(d) {
-  const c = document.getElementById('conteudo-aba');
-
-  c.innerHTML = `
-    <h3>📌 Status Anual</h3>
-
-    <div>
-      <label>Status</label>
-      <input id="id_status" type="number" value="${sanitize(d.id_status)}">
-    </div>
-
-    <div class="actions">
-      <button class="salvar" onclick="salvarStatus()">💾 Atualizar Status</button>
-    </div>
-
-    <p class="muted">Última alteração:
-      <b>${formatarDataBR(d.ValidFrom)}</b>
-      por <b>${sanitize(d.last_modified_by)}</b>
-    </p>
-  `;
-}
-
-function renderAlteracaoStatus() {
-  const c = document.getElementById('conteudo-aba');
-
-  c.innerHTML = `
-    <h3>📝 Registrar Alteração de Status</h3>
-
-    <div>
-      <label>Observação</label>
-      <input id="observacao">
-      
-      <label>Data da Alteração</label>
-      <input id="data_alteracao" type="date">
-    </div>
-
-    <div class="actions">
-      <button class="salvar" onclick="salvarAlteracaoStatus()">💾 Registrar</button>
-    </div>
-  `;
-}
-
-// =========================
-// SALVAR ALTERAÇÕES INLINE
-// =========================
-
 async function salvar(tipo) {
   const inputs = document.querySelectorAll('#conteudo-aba input');
   const payload = {};
@@ -600,7 +631,6 @@ async function salvar(tipo) {
     btn.innerHTML = textoOriginal;
   }
 }
-// NOVO: atualizar curso existente
 
 async function salvarAlunoComplemento() {
   const payload = {
@@ -635,6 +665,26 @@ async function salvarStatus() {
   };
 
   const res = await fetch(`/api/aluno/${ra}/status/update`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json();
+  if (res.ok) {
+    alert(json.msg);
+    location.reload();
+  } else {
+    alert(json.msg);
+  }
+}
+
+async function salvarStatusMensal() {
+  const payload = {
+    id_status: document.getElementById("id_status").value
+  };
+
+  const res = await fetch(`/api/aluno/${ra}/status_mensal/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
