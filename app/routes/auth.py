@@ -5,9 +5,11 @@ bp_auth = Blueprint('auth', __name__)
 
 USUARIOS_FIXOS = {
     'admin': 'ismart',
-    'elson': 'ismart',
-    'fulano': 'ismart',
-    'ciclano': 'ismart'
+    'marcela.lessa': 'ismart1234',
+    'marcos.cerqueira': 'ismart5678',
+    'giovanna.almeida': 'ismart9123',
+    'mauricio.jesus': 'ismart4567',
+    'darlan.dalbianco': 'ismart8912'
 }
 
 def _quer_json(request):
