@@ -138,20 +138,31 @@ def api_aluno_all(ra):
 
     # ALTERAÇÃO STATUS
     cursor.execute('''
-        SELECT TOP 1 *
-        FROM dbo.ismart_alteracao_status
-        WHERE ra = %s
+        SELECT TOP 1 ra, observacao, data_alteracao, last_modified_by, ValidFrom
+        FROM dbo.ismart_alteracao_status_v2
+        WHERE ra = %s 
+        order by id_tempo desc
     ''', (ra,))
     alteracao_status = cursor.fetchone() or {}
 
     # STATUS MENSAL
     cursor.execute('''
-        SELECT TOP 1 *
-        FROM dbo.ismart_status_mensal
+        SELECT TOP 1 ra, id_status, id_tempo, last_modified_by, ValidFrom
+        FROM dbo.ismart_status_mensal_v2
         WHERE ra = %s
         ORDER BY ID_TEMPO DESC
     ''', (ra,))
     status_mensal = cursor.fetchone() or {}
+
+    # ES STATUS META MENSAL
+    cursor.execute('''
+        select TOP 1 
+            ra, id_es_status_meta, id_esal_status_oportunidade, top_empresa, id_tempo, last_modified_by, ValidFrom
+        from es_status_meta_mensal_v2 
+        where ra = %s
+        order by id_tempo desc
+    ''', (ra,))
+    es_status_meta_mensal = cursor.fetchone() or {}
 
     return jsonify({
         'contato': contato,
@@ -160,7 +171,8 @@ def api_aluno_all(ra):
         'status': status,
         'alteracao_status': alteracao_status,
         'aluno_complemento': aluno_complemento,
-        'status_mensal': status_mensal
+        'status_mensal': status_mensal,
+        'es_status_meta_mensal': es_status_meta_mensal
     })
 
 # ============================================================
@@ -385,7 +397,7 @@ def api_update_aluno_cmp(ra):
         return jsonify({"msg": f"Erro ao atualizar os dados do aluno: {e}"}), 500
 
 # ============================================================
-# STATUS — UPDATE
+# STATUS ANUAL — UPDATE OR INSERT
 # ============================================================
 
 @bp_alunos.route('/api/aluno/<ra>/status/update', methods=['POST'])
@@ -423,6 +435,38 @@ def api_update_status(ra):
         return jsonify({"msg": f"Erro ao atualizar status: {e}"}), 500
 
 # ============================================================
+# STATUS MENSAL — UPDATE
+# ============================================================
+
+@bp_alunos.route('/api/aluno/<ra>/status_mensal/update', methods=['POST'])
+@login_requerido
+def api_update_status_mensal(ra):
+    data = request.get_json() or {}
+    usuario = session.get("usuario")
+
+    id_status = data.get("id_status")
+    id_tempo = data.get("id_tempo")
+    if id_status is None:
+        return jsonify({"msg": "Campo id_status é obrigatório"}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            UPDATE dbo.ismart_status_mensal_v2
+            SET id_status = %s, last_modified_by = %s
+            WHERE ra = %s and id_tempo = %s
+        """, (id_status, usuario, ra, id_tempo))
+
+        conn.commit()
+        return jsonify({"msg": "Status Mensal atualizado com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"msg": f"Erro ao atualizar Status Mensal: {e}"}), 500
+
+# ============================================================
 # ALTERAÇÃO STATUS — INSERT
 # ============================================================
 
@@ -443,7 +487,7 @@ def api_insert_alteracao_status(ra):
 
     try:
         cursor.execute("""
-            INSERT INTO dbo.ismart_alteracao_status
+            INSERT INTO dbo.ismart_alteracao_status_v2
             (id_tempo, fonte, observacao, data_alteracao, ra, last_modified_by)
             VALUES (%s, 'Front', %s, %s, %s, %s)
         """, (id_tempo, observacao, data_alteracao, ra, usuario))
@@ -455,6 +499,42 @@ def api_insert_alteracao_status(ra):
         conn.rollback()
         return jsonify({"msg": f"Erro ao inserir alteração: {e}"}), 500
     
+# ============================================================
+# ES STATUS META MENSAL — UPDATE
+# ============================================================
+
+@bp_alunos.route('/api/aluno/<ra>/es_status_meta_mensal/update', methods=['POST'])
+@login_requerido
+def api_update_es_status_meta_mensal(ra):
+    data = request.get_json() or {}
+    usuario = session.get("usuario")
+
+    id_es_status_meta = data.get("id_es_status_meta")
+    id_esal_status_oportunidade = data.get("id_esal_status_oportunidade")
+    top_empresa = data.get("top_empresa")
+    id_tempo = data.get("id_tempo")
+
+    if id_es_status_meta is None:
+        return jsonify({"msg": "Campo id_status é obrigatório"}), 400
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            UPDATE dbo.es_status_meta_mensal_v2
+            SET id_es_status_meta = %s, id_esal_status_oportunidade = %s, top_empresa = %s, last_modified_by = %s
+            WHERE ra = %s and id_tempo = %s
+        """, (id_es_status_meta, id_esal_status_oportunidade, top_empresa, usuario, ra, id_tempo))
+
+        conn.commit()
+        return jsonify({"msg": "ES Status Meta Mensal atualizado com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"msg": f"Erro ao atualizar ES Status Meta Mensal: {e}"}), 500
+
+# =
 
 # NOVAS ROTAS TABELA AUX
 
@@ -498,10 +578,23 @@ def curso_tabelas():
     """)
     status_dp = cursor.fetchall()
 
+    cursor.execute("""
+        select * from es_status_meta
+    """)
+    es_status_meta_dp = cursor.fetchall()
+
+    cursor.execute("""
+        select * from esal_status_oportunidade
+    """)
+    es_status_oport_dp = cursor.fetchall()
+
+
     return jsonify({
         "localidades": localidades,
         "cursos": cursos,
         "raca": raca,
         "genero": genero,
-        "status_dp": status_dp
+        "status_dp": status_dp,
+        "es_status_meta_dp": es_status_meta_dp,
+        "es_status_oport_dp": es_status_oport_dp
     })

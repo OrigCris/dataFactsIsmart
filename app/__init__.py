@@ -13,7 +13,7 @@ def create_app():
                 template_folder='templates')
 
     app.secret_key = 'super-secret'
-    app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 min
+    app.config['PERMANENT_SESSION_LIFETIME'] = 14400
 
     # Logging
     os.makedirs('app/logs', exist_ok=True)

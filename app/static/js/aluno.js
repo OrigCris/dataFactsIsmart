@@ -64,7 +64,8 @@ function abrirAba(tipo) {
   else if (tipo === 'status') renderStatus(dados.status || {});
   else if (tipo === 'status_mensal') renderStatusMensal(dados.status_mensal || {});
   else if (tipo === 'aluno_complemento') renderAlunoComplemento(dados.aluno_complemento || {});
-  else if (tipo === 'alteracao_status') renderAlteracaoStatus();
+  else if (tipo === 'alteracao_status') renderAlteracaoStatus(dados.alteracao_status || {});
+  else if (tipo === 'es_status_meta_mensal') renderEsStatusMetaMensal(dados.es_status_meta_mensal || {});
 }
 
 // =========================
@@ -442,6 +443,9 @@ function renderStatusMensal(aluno) {
       `).join("")}
     </select>
 
+    <label>ID Tempo</label>
+    <input id="id_tempo" type="number" min="0" value="${sanitize(aluno.id_tempo)}" disabled>
+
     <div class="actions">
       <button class="salvar" onclick="salvarStatusMensal()">💾 Salvar</button>
     </div>
@@ -453,7 +457,7 @@ function renderStatusMensal(aluno) {
   `;
 }
 
-function renderAlteracaoStatus() {
+function renderAlteracaoStatus(aluno) {
   const c = document.getElementById('conteudo-aba');
 
   c.innerHTML = `
@@ -461,15 +465,68 @@ function renderAlteracaoStatus() {
 
     <div>
       <label>Observação</label>
-      <input id="observacao">
+      <input id="observacao" value="${sanitize(aluno.observacao)}">
       
       <label>Data da Alteração</label>
-      <input id="data_alteracao" type="date">
+      <input id="data_alteracao" type="date" value="${isoToDateInput(aluno.data_alteracao)}">
     </div>
 
     <div class="actions">
       <button class="salvar" onclick="salvarAlteracaoStatus()">💾 Salvar</button>
     </div>
+
+    <p class="muted">Última alteração:
+      <b>${formatarDataBR(aluno.ValidFrom)}</b>
+      por <b>${sanitize(aluno.last_modified_by)}</b>
+    </p>
+  `;
+}
+
+function renderEsStatusMetaMensal(aluno) {
+  const c = document.getElementById('conteudo-aba');
+
+  const es_status_meta_dp = tabelas.es_status_meta_dp;
+  const es_status_oport_dp = tabelas.es_status_oport_dp;
+
+  c.innerHTML = `
+    <h3>📌 ES Status Meta Mensal</h3>
+
+    <label>Status Meta</label>
+    <select id="id_es_status_meta">
+      <option value="" ${!aluno.id_es_status_meta ? "selected" : ""}>-- selecione --</option>
+      ${es_status_meta_dp.map(g => `
+        <option value="${g.id_es_status_meta}" 
+          ${String(aluno.id_es_status_meta) === String(g.id_es_status_meta) ? "selected" : ""}>
+          ${g.status_meta}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Esal Status Oportunidade</label>
+    <select id="id_esal_status_oportunidade">
+      <option value="" ${!aluno.id_esal_status_oportunidade ? "selected" : ""}>-- selecione --</option>
+      ${es_status_oport_dp.map(g => `
+        <option value="${g.id_esal_status_oportunidade}" 
+          ${String(aluno.id_esal_status_oportunidade) === String(g.id_esal_status_oportunidade) ? "selected" : ""}>
+          ${g.status_oportunidade}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Top Empresa</label>
+    <input id="top_empresa" type="checkbox" ${aluno.top_empresa ? "checked" : ""}>
+    
+    <label>ID Tempo</label>
+    <input id="id_tempo" type="number" min="0" value="${sanitize(aluno.id_tempo)}" disabled>    
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarEsStatusMetaMensal()">💾 Salvar</button>
+    </div>
+
+    <p class="muted">Última alteração:
+      <b>${formatarDataBR(aluno.ValidFrom)}</b>
+      por <b>${sanitize(aluno.last_modified_by)}</b>
+    </p>
   `;
 }
 
@@ -681,7 +738,8 @@ async function salvarStatus() {
 
 async function salvarStatusMensal() {
   const payload = {
-    id_status: document.getElementById("id_status").value
+    id_status: document.getElementById("id_status").value,
+    id_tempo: document.getElementById("id_tempo").value
   };
 
   const res = await fetch(`/api/aluno/${ra}/status_mensal/update`, {
@@ -706,6 +764,29 @@ async function salvarAlteracaoStatus() {
   };
 
   const res = await fetch(`/api/aluno/${ra}/alteracao_status/insert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json();
+  if (res.ok) {
+    alert(json.msg);
+    location.reload();
+  } else {
+    alert(json.msg);
+  }
+}
+
+async function salvarEsStatusMetaMensal() {
+  const payload = {
+    id_es_status_meta: document.getElementById("id_es_status_meta").value,
+    id_esal_status_oportunidade: document.getElementById("id_esal_status_oportunidade").value,
+    top_empresa: document.getElementById("top_empresa").checked ? 1 : 0,
+    id_tempo: document.getElementById("id_tempo").value
+  };
+
+  const res = await fetch(`/api/aluno/${ra}/es_status_meta_mensal/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
