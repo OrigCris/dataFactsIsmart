@@ -107,7 +107,7 @@ def api_aluno_all(ra):
         SELECT TOP 1
             id_localidade_cursos,
             id_cursos_instituicoes,
-            id_tempo,
+            FORMAT(CURRENT_TIMESTAMP, 'yyyyMM') as id_tempo,
             fonte_atualizacao,
             observacao_atualizacao,
             data_inicio_curso,
@@ -494,9 +494,10 @@ def curso_tabelas():
     genero = cursor.fetchall()
 
     cursor.execute("""
-        select * from ismart_status
+        select * from ismart_status where id_status in (1,6)
     """)
     status_dp = cursor.fetchall()
+
     return jsonify({
         "localidades": localidades,
         "cursos": cursos,
