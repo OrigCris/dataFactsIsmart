@@ -397,7 +397,7 @@ function renderCurso(curso) {
 function renderStatus(aluno) {
   const c = document.getElementById('conteudo-aba');
 
-  const status_dp = tabelas.status_dp;
+  const status_dp = tabelas.status_alumni_dp;
 
   c.innerHTML = `
     <h3>📌 Status Anual</h3>
@@ -427,7 +427,7 @@ function renderStatus(aluno) {
 function renderStatusMensal(aluno) {
   const c = document.getElementById('conteudo-aba');
 
-  const status_dp = tabelas.status_dp;
+  const status_dp = tabelas.status_mensal_dp;
 
   c.innerHTML = `
     <h3>📌 Status Mensal</h3>

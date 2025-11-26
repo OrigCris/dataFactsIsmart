@@ -120,11 +120,9 @@ def api_aluno_all(ra):
             turno_curso,
             periodicidade_curso,
             last_modified_by, ValidFrom
-            
         FROM dbo.data_facts_es_informacoes_curso_v2
         WHERE ra = %s
         order by id_tempo desc
-        
     ''', (ra,))
     curso = cursor.fetchone() or {}
     
@@ -576,7 +574,12 @@ def curso_tabelas():
     cursor.execute("""
         select * from ismart_status where id_status in (1,6)
     """)
-    status_dp = cursor.fetchall()
+    status_alumni_dp = cursor.fetchall()
+
+    cursor.execute("""
+        select * from ismart_status where id_status in (7,9,10,11)
+    """)
+    status_mensal_dp = cursor.fetchall()
 
     cursor.execute("""
         select * from es_status_meta
@@ -594,7 +597,8 @@ def curso_tabelas():
         "cursos": cursos,
         "raca": raca,
         "genero": genero,
-        "status_dp": status_dp,
+        "status_alumni_dp": status_alumni_dp,
+        "status_mensal_dp": status_mensal_dp,
         "es_status_meta_dp": es_status_meta_dp,
         "es_status_oport_dp": es_status_oport_dp
     })
