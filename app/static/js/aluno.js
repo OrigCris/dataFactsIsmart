@@ -251,7 +251,7 @@ function renderCurso(curso) {
         <input id="pais" disabled value="${paisAtual}">
 
         <label>ID Tempo</label>
-        <input id="id_tempo" type="number" min="0" value="${sanitize(curso.id_tempo)}">
+        <input id="id_tempo" type="number" min="0" value="${sanitize(curso.id_tempo)}" disabled>
 
         <label>Fonte Atualização</label>
         <input id="fonte_atualizacao" value="Front" disabled>
