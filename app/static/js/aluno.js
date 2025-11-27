@@ -37,11 +37,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   dados = await res.json();
 
   // 2 — tabelas auxiliares
-  const t = await fetch("/api/curso/tabelas");
+  const t = await fetch("/api/tabelas_auxiliares");
   tabelas = await t.json();
 
-  console.log("DEBUG curso:", dados);
-  console.log("DEBUG tabelas:", tabelas);
+  console.log("DEBUG bases:", dados);
+  console.log("DEBUG tabelas auxiliares:", tabelas);
   abrirAba('contato');
 });
 
@@ -66,6 +66,8 @@ function abrirAba(tipo) {
   else if (tipo === 'aluno_complemento') renderAlunoComplemento(dados.aluno_complemento || {});
   else if (tipo === 'alteracao_status') renderAlteracaoStatus(dados.alteracao_status || {});
   else if (tipo === 'es_status_meta_mensal') renderEsStatusMetaMensal(dados.es_status_meta_mensal || {});
+  else if (tipo === 'reg_oportunidade') renderRegOportunidade();
+  
 }
 
 // =========================
@@ -530,6 +532,104 @@ function renderEsStatusMetaMensal(aluno) {
   `;
 }
 
+function renderRegOportunidade() {
+  const c = document.getElementById('conteudo-aba');
+
+  c.innerHTML = `
+    <h3>📌 Registro de Oportunidade</h3>
+
+    <label>Nível da Oportunidade</label>
+    <select id="id_esal_nivel_oportunidade">
+      <option value="" "selected"}>-- selecione --</option>
+      ${[
+          "Analista Júnior", "Analista Pleno", "Analista Sênior", "Analista de laboratório", "Assessoria Executiva", "Assessora", "Assistente",
+          "Associate", "Atividade Empreendedora", "Atlética", "Autônomo", "Autônomo (Consultório/Escritório)", "Bateria", "Biomédica Geneticista",
+          "Centro acadêmico", "Consultor", "Consultora", "Coordenador(a)", "Corporate Counsel", "Cursinho popular", "Digitalizadora", "Diretor(a)",
+          "Empreendedor(a)/Proprietário(a)", "Empresa Júnior", "Enactus", "Engenheira", "Engenheira Nível I", "Engenheira de Dinâmica de Estruturas",
+          "Engenheira de dados junior 2", "Engenheiro Jr", "Engenheiro Junior", "Engenheiro de Dados Júnior", "Engenheiro de Vendas",
+          "Engenheiro de software Jr", "Engenheiro pleno", "Entidade Estudantil", "Equipe de competição", "Especialista", "Estagiário",
+          "Estagiário em Segurança Hídrica", "Estágio Regular Remunerado", "Estágio de Férias", "Estágio de Férias Remunerado",
+          "Estágio não remunerado", "Executivo de Negócios", "Experiência Específica", "Farmacêutico", "Geóloga JR",
+          "Gerente", "Iniciação Científica", "Intercâmbio", "Internato", "Jovem Aprendiz", "Liga Acadêmica", "MEI/PJ", "Médica",
+          "Médica intensivista pediátrica", "Médico Cirurgião", "Médico bolsista do programa médicos pelo Brasil", "Médico plantonista e Gerente",
+          "Monitoria", "Monitora", "Operador", "Outros", "Pesquisador(a)/Professor(a)", "Projetista", "Projeto de Extensão", "RedatorSênior",
+          "Sênior", "Staff Software Engineer", "Supervisor", "TCC-Monografia", "Trainee", "Trabalho Efetivo", "Trabalho Efetivo CLT",
+          "Técnica de Laboratório", "Técnico administrativo", "Vereador", "Voluntariado"
+        ]
+        .map(t => `<option value="${t}"}>${t}</option>`)
+        .join("")}
+    </select>
+
+    <label>Status da Oportunidade</label>
+    <select id="id_esal_status_oportunidade">
+      <option value="" "selected"}>-- selecione --</option>
+      <option value="2"}>OPORTUNIDADE VALIDADA</option>
+      <option value="3"}>OPORTUNIDADE NAO VALIDADA</option>
+    </select>
+
+    <label>Fonte de Atualização</label>
+    <input id="fonte_atualizacao" type="text" value="Front" disabled>
+
+    <label>Cargo da Oportunidade</label>
+    <input id="cargo_oportunidade" type="text" value="">
+
+    <label>Principais Responsabilidades</label>
+    <textarea id="principais_responsabilidades"></textarea>
+
+    <label>Área da Oportunidade</label>
+    <input id="area_oportunidade" type="text" value="">
+
+    <label>Setor da Oportunidade</label>
+    <select id="setor_oportunidade">
+      <option value="" "selected"}>-- selecione --</option>
+      ${[
+          "1° setor (público/governo)", "1º Setor (Público)", "2° setor (privado)", "2º Setor (Privado)", "3° setor (instituições sem fins lucrativos)",
+          "3º Setor (Sem fins lucrativos)", "Privado", "Público", "Setor 2,5 (negócios de impacto)", "Setor 2.5", "Setor 2.5 (Negócios de Impacto)",
+          "Terceiro Setor"
+        ]
+        .map(t => `<option value="${t}"}>${t}</option>`)
+        .join("")}
+    </select>
+
+    <label>Nome da Organização</label>
+    <input id="nome_organizacao" type="text" value="">
+
+    <label>Site da Organização</label>
+    <input id="site_organizacao" type="text" value="">
+
+    <label>Início da Oportunidade</label>
+    <input id="inicio_oportunidade" type="date" value="">
+
+    <label>Término da Oportunidade</label>
+    <input id="termino_oportunidade" type="date" value="">
+
+    <label>Remuneração</label>
+    <input id="remuneracao" type="number" step="0.01" value="">
+
+    <label>Moeda da Remuneração</label>
+    <select id="moeda_remuneracao">
+      <option value="" "selected" }>-- selecione --</option>
+      ${["Real", "Dólar", "Euro", "Libra", "Libra esterlina", "Pesos Filipinos"]
+        .map(t => `<option value="${t}"}>${t}</option>`)
+        .join("")}
+    </select>
+
+    <label>Indicada pelo ISMART?</label>
+    <input id="indicacao_ismart" type="checkbox">
+
+    <label>Top Empresa</label>
+    <input id="top_empresa" type="checkbox">
+
+    <label>Empresa Parceira?</label>
+    <input id="empresa_parceira" type="checkbox">
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarRegOportunidade()">💾 Salvar</button>
+    </div>
+  `;
+}
+
+
 async function salvarCurso() {
   const cidade = document.getElementById("cidade_select").value;
   const estado = document.getElementById("estado_select").value;
@@ -545,27 +645,27 @@ async function salvarCurso() {
     id_localidade_cursos: loc?.id_localidade_cursos || null,
 
     // Curso/Instituição (sempre pega o id da instituição selecionada)
-    id_cursos_instituicoes: document.getElementById("instituicao_select").value,
+    id_cursos_instituicoes: document.getElementById("instituicao_select").value || null,
 
     // Dados gerais
-    id_tempo: document.getElementById("id_tempo").value,
+    id_tempo: document.getElementById("id_tempo").value || null,
     fonte_atualizacao: "Front",
-    observacao_atualizacao: document.getElementById("observacao_atualizacao").value,
+    observacao_atualizacao: document.getElementById("observacao_atualizacao").value || null,
 
     // Datas
-    data_inicio_curso: document.getElementById("data_inicio_curso").value,
-    data_prevista_termino_curso: document.getElementById("data_prevista_termino_curso").value,
-    data_termino_real: document.getElementById("data_termino_real").value,
+    data_inicio_curso: document.getElementById("data_inicio_curso").value || null,
+    data_prevista_termino_curso: document.getElementById("data_prevista_termino_curso").value || null,
+    data_termino_real: document.getElementById("data_termino_real").value || null,
     
     // Informações acadêmicas
-    ano_cursado_previsto: document.getElementById("ano_cursado_previsto").value,
-    possui_bolsa_faculdade: document.getElementById("possui_bolsa_faculdade").value,
-    percentual_bolsa_faculdade: document.getElementById("percentual_bolsa_faculdade").value,
-    mensalidade_curso: document.getElementById("mensalidade_curso").value,
+    ano_cursado_previsto: document.getElementById("ano_cursado_previsto").value || null,
+    possui_bolsa_faculdade: document.getElementById("possui_bolsa_faculdade").value || null,
+    percentual_bolsa_faculdade: document.getElementById("percentual_bolsa_faculdade").value || null,
+    mensalidade_curso: document.getElementById("mensalidade_curso").value || null,
 
     // Agora com selects ✔
-    turno_curso: document.getElementById("turno_curso").value,
-    periodicidade_curso: document.getElementById("periodicidade_curso").value
+    turno_curso: document.getElementById("turno_curso").value || null,
+    periodicidade_curso: document.getElementById("periodicidade_curso").value || null
   };
 
   // Fonte sempre Front
@@ -691,14 +791,14 @@ async function salvar(tipo) {
 
 async function salvarAlunoComplemento() {
   const payload = {
-    id_raca: document.getElementById("id_raca").value,
-    id_genero: document.getElementById("id_genero").value,
-    nome: document.getElementById("nome").value,
-    nome_social: document.getElementById("nome_social").value,
-    pronome: document.getElementById("pronome").value,
-    nome_comunicacao: document.getElementById("nome_comunicacao").value,
-    orientacao_sexual: document.getElementById("orientacao_sexual").value,
-    tamanho_camiseta: document.getElementById("tamanho_camiseta").value
+    id_raca: document.getElementById("id_raca").value || null,
+    id_genero: document.getElementById("id_genero").value || null,
+    nome: document.getElementById("nome").value || null,
+    nome_social: document.getElementById("nome_social").value || null,
+    pronome: document.getElementById("pronome").value || null,
+    nome_comunicacao: document.getElementById("nome_comunicacao").value || null,
+    orientacao_sexual: document.getElementById("orientacao_sexual").value || null,
+    tamanho_camiseta: document.getElementById("tamanho_camiseta").value || null
   };
 
   const res = await fetch(`/api/aluno/${ra}/aluno_cmp/update`, {
@@ -718,7 +818,7 @@ async function salvarAlunoComplemento() {
 
 async function salvarStatus() {
   const payload = {
-    id_status: document.getElementById("id_status").value
+    id_status: document.getElementById("id_status").value || null
   };
 
   const res = await fetch(`/api/aluno/${ra}/status/update`, {
@@ -738,7 +838,7 @@ async function salvarStatus() {
 
 async function salvarStatusMensal() {
   const payload = {
-    id_status: document.getElementById("id_status").value,
+    id_status: document.getElementById("id_status").value || null,
     id_tempo: document.getElementById("id_tempo").value
   };
 
@@ -759,8 +859,8 @@ async function salvarStatusMensal() {
 
 async function salvarAlteracaoStatus() {
   const payload = {
-    observacao: document.getElementById("observacao").value,
-    data_alteracao: document.getElementById("data_alteracao").value
+    observacao: document.getElementById("observacao").value || null,
+    data_alteracao: document.getElementById("data_alteracao").value || null
   };
 
   const res = await fetch(`/api/aluno/${ra}/alteracao_status/insert`, {
@@ -780,8 +880,8 @@ async function salvarAlteracaoStatus() {
 
 async function salvarEsStatusMetaMensal() {
   const payload = {
-    id_es_status_meta: document.getElementById("id_es_status_meta").value,
-    id_esal_status_oportunidade: document.getElementById("id_esal_status_oportunidade").value,
+    id_es_status_meta: document.getElementById("id_es_status_meta").value || null,
+    id_esal_status_oportunidade: document.getElementById("id_esal_status_oportunidade").value || null,
     top_empresa: document.getElementById("top_empresa").checked ? 1 : 0,
     id_tempo: document.getElementById("id_tempo").value
   };
@@ -793,6 +893,50 @@ async function salvarEsStatusMetaMensal() {
   });
 
   const json = await res.json();
+  if (res.ok) {
+    alert(json.msg);
+    location.reload();
+  } else {
+    alert(json.msg);
+  }
+}
+
+async function salvarRegOportunidade() {
+  const agora = new Date();
+  const ano = agora.getFullYear();
+  const mes = String(agora.getMonth() + 1).padStart(2, "0");
+  const id_tempo = `${ano}${mes}`;   // exemplo: 202511
+
+  const payload = {
+    id_esal_nivel_oportunidade: document.getElementById("id_esal_nivel_oportunidade").value || null,
+    id_esal_status_oportunidade: document.getElementById("id_esal_status_oportunidade").value || null,
+    fonte_atualizacao: document.getElementById("fonte_atualizacao").value || null,
+    cargo_oportunidade: document.getElementById("cargo_oportunidade").value || null,
+    principais_responsabilidades: document.getElementById("principais_responsabilidades").value || null,
+    area_oportunidade: document.getElementById("area_oportunidade").value || null,
+    setor_oportunidade: document.getElementById("setor_oportunidade").value || null,
+    nome_organizacao: document.getElementById("nome_organizacao").value || null,
+    site_organizacao: document.getElementById("site_organizacao").value || null,
+    inicio_oportunidade: document.getElementById("inicio_oportunidade").value || null,
+    termino_oportunidade: document.getElementById("termino_oportunidade").value || null,
+    remuneracao: document.getElementById("remuneracao").value || null,
+    moeda_remuneracao: document.getElementById("moeda_remuneracao").value || null,
+    id_tempo: id_tempo,
+    // checkboxes → vira 0 ou 1
+    indicacao_ismart: document.getElementById("indicacao_ismart").checked ? 1 : 0,
+    top_empresa: document.getElementById("top_empresa").checked ? 1 : 0,
+    empresa_parceira: document.getElementById("empresa_parceira").checked ? 1 : 0
+  };
+
+  // Chamada ao backend
+  const res = await fetch(`/api/aluno/${ra}/reg_oportunidade/insert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json();
+
   if (res.ok) {
     alert(json.msg);
     location.reload();

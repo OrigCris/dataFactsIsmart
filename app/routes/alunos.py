@@ -532,13 +532,66 @@ def api_update_es_status_meta_mensal(ra):
         conn.rollback()
         return jsonify({"msg": f"Erro ao atualizar ES Status Meta Mensal: {e}"}), 500
 
-# =
+# ============================================================
+# REGISTRO OPORTUNIDADE — INSERT
+# ============================================================
+
+@bp_alunos.route('/api/aluno/<ra>/reg_oportunidade/insert', methods=['POST'])
+@login_requerido
+def api_insert_reg_oportunidade(ra):
+    data = request.get_json() or {}
+    usuario = session.get("usuario")
+
+    campos = [
+        'id_esal_nivel_oportunidade', 'id_esal_status_oportunidade', 'fonte_atualizacao', 'cargo_oportunidade', 'principais_responsabilidades'
+        ,'area_oportunidade', 'setor_oportunidade', 'nome_organizacao', 'site_organizacao', 'inicio_oportunidade'
+        ,'termino_oportunidade', 'remuneracao', 'moeda_remuneracao', 'indicacao_ismart', 'top_empresa'
+        ,'empresa_parceira', 'id_tempo'
+    ]
+
+    # Somente os campos enviados no JSON e que existem na tabela
+    alteracoes = {k: v for k, v in data.items() if k in campos}
+
+    # Lista de valores (na mesma ordem)
+    valores = [alteracoes.get(c) for c in campos]
+
+    # Adiciona RA e usuário no final
+    valores.append(ra)
+    valores.append(usuario)
+
+    # Transforma em TUPLA ✔
+    valores = tuple(valores)
+
+    # Criação dos placeholders (%s)
+    placeholders = ", ".join(["%s"] * (len(campos) + 2))
+
+    hoje = datetime.now()
+    id_tempo = int(f"{hoje.year}{str(hoje.month).zfill(2)}")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(f"""
+            INSERT INTO dbo.data_facts_esal_registros_oportunidades_v2
+            (
+                {', '.join(campos)}, ra, last_modified_by
+            )
+            VALUES ({placeholders})
+        """, valores)
+
+        conn.commit()
+        return jsonify({"msg": "Registro de oportunidade inserido com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"msg": f"Erro ao inserir oportunidade: {e}"}), 500
 
 # NOVAS ROTAS TABELA AUX
 
-@bp_alunos.route("/api/curso/tabelas")
+@bp_alunos.route("/api/tabelas_auxiliares")
 @login_requerido
-def curso_tabelas():
+def tabelas_auxiliares():
 
     conn = get_connection()
     cursor = conn.cursor(as_dict=True)
