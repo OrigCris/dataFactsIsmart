@@ -7,7 +7,7 @@ def get_connection():
         g.conn = pymssql.connect(
             server='ismart-sql-server.database.windows.net',
             user='ismart',
-            password='Adminsmart!',
+            password='th!juyep8iFr',
             database='dev-ismart-sql-db',
             port=1433
         )
