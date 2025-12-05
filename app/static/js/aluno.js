@@ -1,6 +1,7 @@
 const ra = window.RA_ATUAL || '';
 let dados = {};
 let tabelas = {};
+let dadoOriginal = null;
 
 // =========================
 // UTILITÁRIOS
@@ -215,6 +216,8 @@ function renderCurso(curso) {
   const c = document.getElementById('conteudo-aba');
   const existe = curso && Object.keys(curso).length > 0;
 
+  dadoOriginal = curso;
+
   const localidades = tabelas.localidades;
   const cursosTab = tabelas.cursos;
 
@@ -400,7 +403,7 @@ function renderStatus(aluno) {
   const c = document.getElementById('conteudo-aba');
 
   const status_dp = tabelas.status_alumni_dp;
-
+  dadoOriginal = aluno;
   c.innerHTML = `
     <h3>📌 Status Anual</h3>
 
@@ -629,11 +632,12 @@ function renderRegOportunidade() {
   `;
 }
 
-
 async function salvarCurso() {
   const cidade = document.getElementById("cidade_select").value;
   const estado = document.getElementById("estado_select").value;
   const pais = document.getElementById("pais").value;
+
+  const id_cursos_instituicoes_antigo = cursoOriginal?.id_cursos_instituicoes ?? null;
 
   // Encontrar o ID da localidade
   const loc = tabelas.localidades.find(
@@ -646,6 +650,7 @@ async function salvarCurso() {
 
     // Curso/Instituição (sempre pega o id da instituição selecionada)
     id_cursos_instituicoes: document.getElementById("instituicao_select").value || null,
+    id_cursos_instituicoes_antigo: id_cursos_instituicoes_antigo,
 
     // Dados gerais
     id_tempo: document.getElementById("id_tempo").value || null,
@@ -817,8 +822,11 @@ async function salvarAlunoComplemento() {
 }
 
 async function salvarStatus() {
+  const id_tempo_status = dadoOriginal?.id_tempo ?? null;
+  
   const payload = {
-    id_status: document.getElementById("id_status").value || null
+    id_status: document.getElementById("id_status").value || null,
+    id_tempo: id_tempo_status
   };
 
   const res = await fetch(`/api/aluno/${ra}/status/update`, {

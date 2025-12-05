@@ -15,10 +15,14 @@ def home():
     conn = get_connection()
     cursor = conn.cursor(as_dict=True)
     cursor.execute('''
-        SELECT TOP 100 
-            ra, UPPER(nome) AS nome
-        FROM dbo.data_facts_ismart_aluno_complemento_v2
-        ORDER BY ra ASC
+        select TOP 100 aluno.ra, upper(nome) as nome 
+        from dbo.data_facts_ismart_aluno_complemento_v2 aluno
+        inner join (
+            select distinct ra from ismart_matricula
+            where id_tempo = (select max(id_tempo) from ismart_matricula) and id_projeto in (3,4)
+        ) aux
+            on aluno.ra = aux.ra
+        ORDER BY aluno.ra ASC
     ''')
     alunos = cursor.fetchall()
     return render_template(
@@ -36,16 +40,20 @@ def buscar():
     cursor = conn.cursor(as_dict=True)
 
     query_base = '''
-        SELECT TOP 100 
-            ra, UPPER(nome) AS nome
-        FROM dbo.data_facts_ismart_aluno_complemento_v2
+        select TOP 100 aluno.ra, upper(nome) as nome 
+        from dbo.data_facts_ismart_aluno_complemento_v2 aluno
+        inner join (
+            select distinct ra from ismart_matricula
+            where id_tempo = (select max(id_tempo) from ismart_matricula) and id_projeto in (3,4)
+        ) aux
+            on aluno.ra = aux.ra
     '''
 
     if termo:
         like = f"%{termo}%"
-        cursor.execute(f"{query_base} WHERE ra LIKE %s OR nome LIKE %s ORDER BY ra ASC", (like, like))
+        cursor.execute(f"{query_base} WHERE aluno.ra LIKE %s OR nome LIKE %s ORDER BY aluno.ra ASC", (like, like))
     else:
-        cursor.execute(f"{query_base} ORDER BY ra ASC")
+        cursor.execute(f"{query_base} ORDER BY aluno.ra ASC")
 
     alunos = cursor.fetchall()
     return jsonify(alunos)
@@ -57,9 +65,41 @@ def buscar():
 @bp_alunos.route('/aluno/<ra>')
 @login_requerido
 def aluno_detalhe(ra):
+    conn = get_connection()
+    cursor = conn.cursor(as_dict=True)
+
+    # Verifica se o RA está na "matrícula atual" do projeto 4
+    cursor.execute("""
+        WITH
+        base as (
+        SELECT ra, sum(case when id_projeto = 3 then 1 end) as qt_univ, sum(case when id_projeto = 4 then 1 end) as qt_alumni
+                FROM ismart_matricula
+                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula) 
+                group by ra
+        )
+        select 1 as in_alumni from base where qt_alumni = 1 and ra = %s
+    """, (ra,))
+
+    in_alumni = cursor.fetchone() is not None
+
+    cursor.execute("""
+        WITH
+        base as (
+        SELECT ra, sum(case when id_projeto = 3 then 1 end) as qt_univ, sum(case when id_projeto = 4 then 1 end) as qt_alumni
+                FROM ismart_matricula
+                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula) 
+                group by ra
+        )
+        select 1 as in_univ from base where qt_univ = 1 and qt_alumni is null and ra = %s
+    """, (ra,))
+
+    in_univ = cursor.fetchone() is not None
+    
     return render_template(
         'aluno.html',
         ra=ra,
+        tem_status_atual=in_alumni,
+        tem_status_mensal=in_univ,
         usuario=session['usuario'],
         current_year=datetime.now().year
     )
@@ -122,15 +162,16 @@ def api_aluno_all(ra):
             last_modified_by, ValidFrom
         FROM dbo.data_facts_es_informacoes_curso_v2
         WHERE ra = %s
-        order by id_tempo desc
+        order by id_tempo desc, id_informacoes_curso desc
     ''', (ra,))
     curso = cursor.fetchone() or {}
     
     # STATUS ALUMNI
     cursor.execute('''
-        SELECT TOP 1 ra, id_status, last_modified_by, ValidFrom
+        SELECT TOP 1 ra, id_status, id_tempo, last_modified_by, ValidFrom
         FROM dbo.alumni_status_anual_v2
-        WHERE ra = %s
+        WHERE ra = %s 
+        order by id_tempo desc, id_al_status_anual desc
     ''', (ra,))
     status = cursor.fetchone() or {}
 
@@ -281,19 +322,25 @@ def api_insert_curso(ra):
 
     valores = [data.get(c) for c in campos]
 
+    in_transf = 0
+
+    if data.get('id_cursos_instituicoes_antigo'):
+        if int(data.get('id_cursos_instituicoes_antigo')) != int(data.get('id_cursos_instituicoes')):
+            in_transf = 1
+
     conn = get_connection()
     cursor = conn.cursor()
 
     try:
-        placeholders = ", ".join(["%s"] * (len(campos) + 2))
+        placeholders = ", ".join(["%s"] * (len(campos) + 3))
 
         cursor.execute(
             f"""
             INSERT INTO dbo.data_facts_es_informacoes_curso_v2
-            ({', '.join(campos)}, last_modified_by, ra)
+            ({', '.join(campos)}, transferencia, last_modified_by, ra)
             VALUES ({placeholders})
             """,
-            tuple(valores) + (usuario, ra,)
+            tuple(valores) + (in_transf, usuario, ra,)
         )
 
         conn.commit()
@@ -301,59 +348,6 @@ def api_insert_curso(ra):
     except Exception as e:
         conn.rollback()
         return jsonify({"msg": f"Erro ao inserir curso: {e}"}), 500
-
-# ============================================================
-# CURSO — UPDATE (somente o último registro!)
-# ============================================================
-
-# @bp_alunos.route('/api/aluno/<ra>/curso/update', methods=['POST'])
-# @login_requerido
-# def api_update_curso(ra):
-#     data = request.get_json() or {}
-#     usuario = session.get("usuario")
-
-#     campos = [
-#         "id_localidade_cursos", "id_cursos_instituicoes", "id_tempo",
-#         "fonte_atualizacao", "observacao_atualizacao",
-#         "data_inicio_curso", "data_prevista_termino_curso", "data_termino_real",
-#         "ano_cursado_previsto", "percentual_bolsa_faculdade",
-#         "mensalidade_curso", "turno_curso", "periodicidade_curso"
-#     ]
-
-#     alteracoes = {k: v for k, v in data.items() if k in campos}
-#     if not alteracoes:
-#         return jsonify({"msg": "Nada para atualizar."}), 400
-
-#     sets = ", ".join([f"{k} = %s" for k in alteracoes.keys()])
-#     valores = tuple(alteracoes.values()) + (usuario, ra)
-
-#     conn = get_connection()
-#     cursor = conn.cursor()
-
-#     try:
-#         cursor.execute(
-#             f"""
-#             UPDATE dbo.data_facts_es_informacoes_curso_v2
-#             SET {sets}, last_modified_by = %s
-#             WHERE ra = %s
-#             AND id_informacoes_curso = (
-#                 SELECT MAX(id_informacoes_curso)
-#                 FROM dbo.data_facts_es_informacoes_curso_v2
-#                 WHERE ra = %s
-#             )
-#             """,
-#             valores + (ra,)
-#         )
-
-#         if cursor.rowcount == 0:
-#             return jsonify({"msg": "Nenhum curso encontrado para atualizar."}), 404
-
-#         conn.commit()
-#         return jsonify({"msg": "Curso atualizado com sucesso!"})
-
-#     except Exception as e:
-#         conn.rollback()
-#         return jsonify({"msg": f"Erro ao atualizar curso: {e}"}), 500
 
 # ============================================================
 # Aluno Complemento — UPDATE
@@ -405,6 +399,7 @@ def api_update_status(ra):
     usuario = session.get("usuario")
 
     id_status = data.get("id_status")
+    id_tempo = data.get("id_tempo")
     if id_status is None:
         return jsonify({"msg": "Campo id_status é obrigatório"}), 400
 
@@ -415,8 +410,8 @@ def api_update_status(ra):
         cursor.execute("""
             UPDATE dbo.alumni_status_anual_v2
             SET id_status = %s, last_modified_by = %s
-            WHERE ra = %s
-        """, (id_status, usuario, ra))
+            WHERE ra = %s and id_tempo = %s
+        """, (id_status, usuario, ra, id_tempo))
 
         if cursor.rowcount == 0:
             cursor.execute("""
@@ -625,12 +620,12 @@ def tabelas_auxiliares():
     genero = cursor.fetchall()
 
     cursor.execute("""
-        select * from ismart_status where id_status in (1,6)
+        select * from ismart_status where id_status in (1, 6)
     """)
     status_alumni_dp = cursor.fetchall()
 
     cursor.execute("""
-        select * from ismart_status where id_status in (7,9,10,11)
+        select * from ismart_status where id_status in (2,7,9,10,11)
     """)
     status_mensal_dp = cursor.fetchall()
 
