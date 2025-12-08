@@ -63,7 +63,7 @@ function abrirAba(tipo) {
   else if (tipo === 'endereco') render(tipo, dados.endereco || {});
   else if (tipo === 'curso') renderCurso(dados.curso || {});
   else if (tipo === 'status') renderStatus(dados.status || {});
-  else if (tipo === 'status_mensal') renderStatusMensal(dados.status_mensal || {});
+  else if (tipo === 'status_mensal') renderStatusMensal(dados || {});
   else if (tipo === 'aluno_complemento') renderAlunoComplemento(dados.aluno_complemento || {});
   else if (tipo === 'alteracao_status') renderAlteracaoStatus(dados.alteracao_status || {});
   else if (tipo === 'es_status_meta_mensal') renderEsStatusMetaMensal(dados.es_status_meta_mensal || {});
@@ -429,35 +429,49 @@ function renderStatus(aluno) {
   `;
 }
 
-function renderStatusMensal(aluno) {
+function renderStatusMensal(dados) {
   const c = document.getElementById('conteudo-aba');
 
   const status_dp = tabelas.status_mensal_dp;
+
+  const aluno_status = dados.status_mensal
+  const alt_status = dados.alteracao_status
 
   c.innerHTML = `
     <h3>📌 Status Mensal</h3>
 
     <label>Status Mensal</label>
     <select id="id_status">
-      <option value="" ${!aluno.id_status ? "selected" : ""}>-- selecione --</option>
+      <option value="" ${!aluno_status.id_status ? "selected" : ""}>-- selecione --</option>
       ${status_dp.map(g => `
         <option value="${g.id_status}" 
-          ${String(aluno.id_status) === String(g.id_status) ? "selected" : ""}>
+          ${String(aluno_status.id_status) === String(g.id_status) ? "selected" : ""}>
           ${g.status}
         </option>
       `).join("")}
     </select>
 
     <label>ID Tempo</label>
-    <input id="id_tempo" type="number" min="0" value="${sanitize(aluno.id_tempo)}" disabled>
+    <input id="id_tempo" type="number" min="0" value="${sanitize(aluno_status.id_tempo)}" disabled>
+    <br/>
+    <br/>
+    <h3>📝 Registrar Alteração de Status</h3>
+
+    <div>
+      <label>Observação</label>
+      <input id="observacao" value="${sanitize(alt_status.observacao)}">
+      
+      <label>Data da Alteração</label>
+      <input id="data_alteracao" type="date" value="${isoToDateInput(alt_status.data_alteracao)}">
+    </div>
 
     <div class="actions">
       <button class="salvar" onclick="salvarStatusMensal()">💾 Salvar</button>
     </div>
 
     <p class="muted">Última alteração:
-      <b>${formatarDataBR(aluno.ValidFrom)}</b>
-      por <b>${sanitize(aluno.last_modified_by)}</b>
+      <b>${formatarDataBR(aluno_status.ValidFrom)}</b>
+      por <b>${sanitize(aluno_status.last_modified_by)}</b>
     </p>
   `;
 }
@@ -847,7 +861,9 @@ async function salvarStatus() {
 async function salvarStatusMensal() {
   const payload = {
     id_status: document.getElementById("id_status").value || null,
-    id_tempo: document.getElementById("id_tempo").value
+    id_tempo: document.getElementById("id_tempo").value,
+    observacao: document.getElementById("observacao").value,
+    data_alteracao: document.getElementById("data_alteracao").value
   };
 
   const res = await fetch(`/api/aluno/${ra}/status_mensal/update`, {

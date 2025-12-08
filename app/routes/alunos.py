@@ -439,6 +439,10 @@ def api_update_status_mensal(ra):
 
     id_status = data.get("id_status")
     id_tempo = data.get("id_tempo")
+    observacao = data.get("observacao")
+    data_alteracao = data.get("data_alteracao")
+    ano_mes = datetime.now().strftime('%Y') + '01'
+
     if id_status is None:
         return jsonify({"msg": "Campo id_status é obrigatório"}), 400
 
@@ -447,10 +451,22 @@ def api_update_status_mensal(ra):
 
     try:
         cursor.execute("""
+            SELECT id_matricula FROM ismart_matricula where ra = %s and id_tempo = %s
+        """, (ra, ano_mes))
+        id_matricula = cursor.fetchone()
+        print(id_matricula)
+
+        cursor.execute("""
             UPDATE dbo.ismart_status_mensal_v2
             SET id_status = %s, last_modified_by = %s
             WHERE ra = %s and id_tempo = %s
         """, (id_status, usuario, ra, id_tempo))
+
+        cursor.execute("""
+            INSERT INTO dbo.ismart_alteracao_status_v2
+            (id_tempo, id_matricula, id_status, fonte, observacao, data_alteracao, ra, last_modified_by)
+            VALUES (%s, %s, %s, 'Front', %s, %s, %s, %s)
+        """, (id_tempo, id_matricula, id_status, observacao, data_alteracao, ra, usuario))
 
         conn.commit()
         return jsonify({"msg": "Status Mensal atualizado com sucesso!"})
