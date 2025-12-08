@@ -18,8 +18,8 @@ def home():
         select TOP 100 aluno.ra, upper(nome) as nome 
         from dbo.data_facts_ismart_aluno_complemento_v2 aluno
         inner join (
-            select distinct ra from ismart_matricula
-            where id_tempo = (select max(id_tempo) from ismart_matricula) and id_projeto in (3,4)
+            select distinct ra from ismart_matricula_v2
+            where id_tempo = (select max(id_tempo) from ismart_matricula_v2) and id_projeto in (3,4)
         ) aux
             on aluno.ra = aux.ra
         ORDER BY aluno.ra ASC
@@ -43,8 +43,8 @@ def buscar():
         select TOP 100 aluno.ra, upper(nome) as nome 
         from dbo.data_facts_ismart_aluno_complemento_v2 aluno
         inner join (
-            select distinct ra from ismart_matricula
-            where id_tempo = (select max(id_tempo) from ismart_matricula) and id_projeto in (3,4)
+            select distinct ra from ismart_matricula_v2
+            where id_tempo = (select max(id_tempo) from ismart_matricula_v2) and id_projeto in (3,4)
         ) aux
             on aluno.ra = aux.ra
     '''
@@ -73,8 +73,8 @@ def aluno_detalhe(ra):
         WITH
         base as (
         SELECT ra, sum(case when id_projeto = 3 then 1 end) as qt_univ, sum(case when id_projeto = 4 then 1 end) as qt_alumni
-                FROM ismart_matricula
-                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula) 
+                FROM ismart_matricula_v2
+                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula_v2) 
                 group by ra
         )
         select 1 as in_alumni from base where qt_alumni = 1 and ra = %s
@@ -86,8 +86,8 @@ def aluno_detalhe(ra):
         WITH
         base as (
         SELECT ra, sum(case when id_projeto = 3 then 1 end) as qt_univ, sum(case when id_projeto = 4 then 1 end) as qt_alumni
-                FROM ismart_matricula
-                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula) 
+                FROM ismart_matricula_v2
+                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula_v2) 
                 group by ra
         )
         select 1 as in_univ from base where qt_univ = 1 and qt_alumni is null and ra = %s
@@ -346,7 +346,24 @@ def api_insert_curso(ra):
         conn.commit()
 
         if data.get('data_termino_real'):
-            print('tem data')
+            ano_mes = datetime.now().strftime('%Y') + '01'
+            id_tempo = data.get('id_tempo')
+            cursor.execute(f"""INSERT INTO dbo.ismart_matricula_v2 (id_tempo, id_projeto, ra, last_modified_by) values ({ano_mes}, 4, {ra}, '{usuario}')""")
+            
+            cursor.execute("""
+                UPDATE dbo.ismart_status_mensal_v2
+                SET id_status = 8, last_modified_by = %s
+                WHERE ra = %s and id_tempo = %s
+            """, (usuario, ra, id_tempo))
+
+            cursor.execute("""
+                SELECT TOP 1 id_matricula FROM ismart_matricula_v2 where ra = %s and id_tempo = %s and id_projeto = 4
+            """, (ra, ano_mes))
+            id_matricula = cursor.fetchone()[0]
+            
+            cursor.execute(f"""INSERT INTO dbo.alumni_status_anual_v2 (id_matricula, ra, id_status, id_tempo, last_modified_by) values ({id_matricula}, {ra}, 6, {ano_mes}, '{usuario}')""")
+
+            conn.commit()
         else:
             print('nao tem data')
         return jsonify({"msg": "Curso inserido com sucesso!"})
@@ -456,7 +473,7 @@ def api_update_status_mensal(ra):
 
     try:
         cursor.execute("""
-            SELECT id_matricula FROM ismart_matricula where ra = %s and id_tempo = %s
+            SELECT id_matricula FROM ismart_matricula_v2 where ra = %s and id_tempo = %s
         """, (ra, ano_mes))
         id_matricula = cursor.fetchone()
         print(id_matricula)
