@@ -651,7 +651,7 @@ async function salvarCurso() {
   const estado = document.getElementById("estado_select").value;
   const pais = document.getElementById("pais").value;
 
-  const id_cursos_instituicoes_antigo = cursoOriginal?.id_cursos_instituicoes ?? null;
+  const id_cursos_instituicoes_antigo = dadoOriginal?.id_cursos_instituicoes ?? null;
 
   // Encontrar o ID da localidade
   const loc = tabelas.localidades.find(

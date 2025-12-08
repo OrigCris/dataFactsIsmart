@@ -344,6 +344,11 @@ def api_insert_curso(ra):
         )
 
         conn.commit()
+
+        if data.get('data_termino_real'):
+            print('tem data')
+        else:
+            print('nao tem data')
         return jsonify({"msg": "Curso inserido com sucesso!"})
     except Exception as e:
         conn.rollback()
