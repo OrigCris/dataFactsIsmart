@@ -688,6 +688,42 @@ def api_insert_descricao_evento(ra):
         conn.rollback()
         return jsonify({"msg": f"Erro ao inserir descrição do evento: {e}"}), 500
 
+@bp_alunos.route('/api/aluno/<ra>/registro_evento/insert', methods=['POST'])
+@login_requerido
+def api_insert_registro_evento(ra):
+    data = request.get_json() or {}
+    usuario = session.get("usuario")
+
+    id_esal_tipos_eventos = data.get("id_esal_tipos_eventos")
+    id_esal_descricao_eventos = data.get("id_esal_descricao_eventos")
+    data_inicio = data.get("data_inicio")
+    data_termino = data.get("data_termino")
+    horas_duracao = data.get("horas_duracao")
+    ano_mes = datetime.now().strftime('%Y') + '01'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute(f"""
+            select max(sessao_evento) + 1 as sessao_evento from esal_registros_eventos_projetos_v2 where id_esal_descricao_eventos = {id_esal_descricao_eventos}
+        """)
+        sessao_evento = cursor.fetchone()
+
+        cursor.execute("""
+            INSERT INTO dbo.esal_registros_eventos_projetos_v2
+            (id_esal_tipos_eventos, id_esal_descricao_eventos, data_inicio, data_termino, horas_duracao, sessao_evento, id_tempo, last_modified_by)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (id_esal_tipos_eventos, id_esal_descricao_eventos, data_inicio, data_termino, horas_duracao, sessao_evento, ano_mes, usuario))
+
+        conn.commit()
+        return jsonify({"msg": "Evento registrado com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"msg": f"Erro ao inserir evento: {e}"}), 500
+
 # NOVAS ROTAS TABELA AUX
 
 @bp_alunos.route("/api/tabelas_auxiliares")
@@ -745,6 +781,10 @@ def tabelas_auxiliares():
     """)
     es_status_oport_dp = cursor.fetchall()
 
+    cursor.execute("""
+        select id_esal_descricao_eventos, nome_evento from esal_descricao_eventos_v2
+    """)
+    desc_eventos = cursor.fetchall()
 
     return jsonify({
         "localidades": localidades,
@@ -754,5 +794,6 @@ def tabelas_auxiliares():
         "status_alumni_dp": status_alumni_dp,
         "status_mensal_dp": status_mensal_dp,
         "es_status_meta_dp": es_status_meta_dp,
-        "es_status_oport_dp": es_status_oport_dp
+        "es_status_oport_dp": es_status_oport_dp,
+        "desc_eventos": desc_eventos
     })

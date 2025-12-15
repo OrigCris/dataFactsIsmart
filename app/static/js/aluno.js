@@ -67,6 +67,7 @@ function abrirAba(tipo) {
   else if (tipo === 'aluno_complemento') renderAlunoComplemento(dados.aluno_complemento || {});
   else if (tipo === 'alteracao_status') renderAlteracaoStatus(dados.alteracao_status || {});
   else if (tipo === 'es_status_meta_mensal') renderEsStatusMetaMensal(dados.es_status_meta_mensal || {});
+  else if (tipo === 'registro_evento') renderRegistroEvento();
   else if (tipo === 'inscricao_evento') renderInscricaoEvento();
   else if (tipo === 'descricao_evento') renderDescEvento();
   else if (tipo === 'reg_oportunidade') renderRegOportunidade();
@@ -712,6 +713,47 @@ function renderRegOportunidade() {
   `;
 }
 
+function renderRegistroEvento() {
+  const c = document.getElementById('conteudo-aba');
+
+  const desc_eventos = tabelas.desc_eventos;
+
+  c.innerHTML = `
+    <h3>📌 Registo de novo evento</h3>
+
+    <label>Modalidade do evento</label>
+    <select id="id_esal_tipos_eventos">
+      <option value="" "selected"}>-- selecione --</option>
+      <option value="1"}>PRESENCIAL</option>
+      <option value="2"}>ONLINE</option>
+      <option value="3"}>HÍBRIDO</option>
+    </select>
+
+    <label>Descrição do evento</label>
+    <select id="id_esal_descricao_eventos">
+      <option value="" "selected"}>-- selecione --</option>
+      ${desc_eventos.map(g => `
+        <option value="${g.id_esal_descricao_eventos}">
+          ${g.nome_evento}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Data Início</label>
+    <input id="data_inicio" type="date">
+
+    <label>Data Término</label>
+    <input id="data_termino" type="date">
+    
+    <label>Duração do evento (em horas)</label>
+    <input id="horas_duracao" type="number">
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarRegEvento()">💾 Salvar</button>
+    </div>'
+  `;
+}
+
 async function salvarCurso() {
   const cidade = document.getElementById("cidade_select").value;
   const estado = document.getElementById("estado_select").value;
@@ -1020,6 +1062,32 @@ async function salvarRegOportunidade() {
 
   // Chamada ao backend
   const res = await fetch(`/api/aluno/${ra}/reg_oportunidade/insert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json();
+
+  if (res.ok) {
+    alert(json.msg);
+    location.reload();
+  } else {
+    alert(json.msg);
+  }
+}
+
+async function salvarRegEvento() {
+  const payload = {
+    id_esal_tipos_eventos: document.getElementById("id_esal_tipos_eventos").value || null,
+    id_esal_descricao_eventos: document.getElementById("id_esal_descricao_eventos").value || null,
+    data_inicio: document.getElementById("data_inicio").value || null,
+    data_termino: document.getElementById("data_termino").value || null,
+    horas_duracao: document.getElementById("horas_duracao").value || null
+  };
+
+  // Chamada ao backend
+  const res = await fetch(`/api/aluno/${ra}/registro_evento/insert`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
