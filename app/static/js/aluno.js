@@ -67,6 +67,8 @@ function abrirAba(tipo) {
   else if (tipo === 'aluno_complemento') renderAlunoComplemento(dados.aluno_complemento || {});
   else if (tipo === 'alteracao_status') renderAlteracaoStatus(dados.alteracao_status || {});
   else if (tipo === 'es_status_meta_mensal') renderEsStatusMetaMensal(dados.es_status_meta_mensal || {});
+  else if (tipo === 'inscricao_evento') renderInscricaoEvento();
+  else if (tipo === 'descricao_evento') renderDescEvento();
   else if (tipo === 'reg_oportunidade') renderRegOportunidade();
   
 }
@@ -549,6 +551,70 @@ function renderEsStatusMetaMensal(aluno) {
   `;
 }
 
+function renderInscricaoEvento() {
+  const c = document.getElementById('conteudo-aba');
+
+  const opcoes35 = Array.from({ length: 35 }, (_, i) => {
+    const n = i + 1;
+    return `<option value="${n}">${n}</option>`;
+  }).join("");
+
+  c.innerHTML = `
+    <h3>📌 Inscrição de evento</h3>
+
+    <label>Tipo de participação de evento</label>
+    <select id="id_esal_tipo_participacao_eventos">
+      <option value="" selected>-- selecione --</option>
+      <option value="1">Engajamento</option>
+      <option value="2">Giveback</option>
+    </select>
+
+    <label>ID Registro evento projeto</label>
+    <select id="id_esal_registros_eventos_projetos" name="id_esal_registros_eventos_projetos">
+      <option value="" selected>-- selecione --</option>
+      ${opcoes35}
+    </select>
+
+    <label>Horas participadas</label>
+    <input id="horas_participacao" type="text" value="">
+
+    <label>Participou do evento?</label>
+    <input id="participou_evento" type="checkbox">
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarInscricaoEvento()">💾 Salvar</button>
+    </div>
+  `;
+}
+
+function renderDescEvento() {
+  const c = document.getElementById('conteudo-aba');
+
+  c.innerHTML = `
+    <h3>📌 Descrição evento</h3>
+
+    <label>Projeto</label>
+    <select id="id_projeto">
+      <option value="" selected>-- selecione --</option>
+      <option value="1">PRESENCIAL</option>
+      <option value="2">ISMART ONLINE</option>
+      <option value="3">ENSINO SUPERIOR</option>
+      <option value="4">ALUMNI</option>
+      <option value="5">ACADEMIA DIGITAL</option>
+    </select>
+
+    <label>Nome do evento</label>
+    <input id="nome_evento" type="text" value="">
+
+    <label>Descrição do evento</label>
+    <input id="descricao_evento" type="text" value="">
+
+    <div class="actions">
+      <button class="salvar" onclick="salvarDescEvento()">💾 Salvar</button>
+    </div>
+  `;
+}
+
 function renderRegOportunidade() {
   const c = document.getElementById('conteudo-aba');
 
@@ -954,6 +1020,55 @@ async function salvarRegOportunidade() {
 
   // Chamada ao backend
   const res = await fetch(`/api/aluno/${ra}/reg_oportunidade/insert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json();
+
+  if (res.ok) {
+    alert(json.msg);
+    location.reload();
+  } else {
+    alert(json.msg);
+  }
+}
+
+async function salvarInscricaoEvento() {
+  const payload = {
+    id_esal_tipo_participacao_eventos: document.getElementById("id_esal_tipo_participacao_eventos").value || null,
+    id_esal_registros_eventos_projetos: document.getElementById("id_esal_registros_eventos_projetos").value || null,
+    horas_participacao: document.getElementById("horas_participacao").value || null,
+    participou_evento: document.getElementById("participou_evento").checked ? 1 : 0
+  };
+
+  // Chamada ao backend
+  const res = await fetch(`/api/aluno/${ra}/inscricao_evento/insert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json();
+
+  if (res.ok) {
+    alert(json.msg);
+    location.reload();
+  } else {
+    alert(json.msg);
+  }
+}
+
+async function salvarDescEvento() {
+  const payload = {
+    id_projeto: document.getElementById("id_projeto").value || null,
+    nome_evento: document.getElementById("nome_evento").value || null,
+    descricao_evento: document.getElementById("descricao_evento").value || null
+  };
+
+  // Chamada ao backend
+  const res = await fetch(`/api/aluno/${ra}/descricao_evento/insert`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

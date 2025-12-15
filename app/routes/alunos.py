@@ -620,6 +620,74 @@ def api_insert_reg_oportunidade(ra):
         conn.rollback()
         return jsonify({"msg": f"Erro ao inserir oportunidade: {e}"}), 500
 
+# ============================================================
+# ESAL INCRICOES EVENTOS — INSERT
+# ============================================================
+
+@bp_alunos.route('/api/aluno/<ra>/inscricao_evento/insert', methods=['POST'])
+@login_requerido
+def api_insert_inscricao_evento(ra):
+    data = request.get_json() or {}
+    usuario = session.get("usuario")
+
+    id_esal_tipo_participacao_eventos = data.get("id_esal_tipo_participacao_eventos")
+    id_esal_registros_eventos_projetos = data.get("id_esal_registros_eventos_projetos")
+    horas_participacao = data.get("horas_participacao")
+    participou_evento = data.get("participou_evento")
+
+    ano_mes = datetime.now().strftime('%Y') + '01'
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT id_matricula FROM ismart_matricula_v2 where ra = %s and id_tempo = %s
+        """, (ra, ano_mes))
+        id_matricula = cursor.fetchone()
+        print(id_matricula)
+
+        cursor.execute("""
+            INSERT INTO dbo.esal_inscricoes_eventos_v2
+            (id_matricula, ra, id_esal_tipo_participacao_eventos, id_esal_registros_eventos_projetos, horas_participacao, participou_evento, last_modified_by)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (id_matricula, ra, id_esal_tipo_participacao_eventos, id_esal_registros_eventos_projetos, horas_participacao, participou_evento, usuario))
+
+        conn.commit()
+        return jsonify({"msg": "Inscrição de evento registrada com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"msg": f"Erro ao inserir evento: {e}"}), 500
+    
+@bp_alunos.route('/api/aluno/<ra>/descricao_evento/insert', methods=['POST'])
+@login_requerido
+def api_insert_descricao_evento(ra):
+    data = request.get_json() or {}
+    usuario = session.get("usuario")
+
+    id_projeto = data.get("id_projeto")
+    nome_evento = data.get("nome_evento")
+    descricao_evento = data.get("descricao_evento")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute("""
+            INSERT INTO dbo.esal_descricao_eventos_v2
+            (id_projeto, nome_evento, descricao_evento, last_modified_by)
+            VALUES (%s, %s, %s, %s)
+        """, (id_projeto, nome_evento, descricao_evento, usuario))
+
+        conn.commit()
+        return jsonify({"msg": "Descrição do evento registrada com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"msg": f"Erro ao inserir descrição do evento: {e}"}), 500
+
 # NOVAS ROTAS TABELA AUX
 
 @bp_alunos.route("/api/tabelas_auxiliares")
