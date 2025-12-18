@@ -10,7 +10,11 @@ USUARIOS_FIXOS = {
     'giovanna.almeida': 'ismart9123',
     'mauricio.jesus': 'ismart4567',
     'darlan.dalbianco': 'ismart8912',
-    'alex.oliveira': 'ismart3456'
+    'alex.oliveira': 'ismart3456',
+    'paola.loza': 'ismart5681',
+    'fernanda.silva': 'ismart8694',
+    'raquel.soares': 'ismart6796',
+    'gabriela.barreto': 'ismart2368'
 }
 
 def _quer_json(request):
