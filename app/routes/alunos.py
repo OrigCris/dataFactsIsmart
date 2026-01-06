@@ -16,10 +16,10 @@ def home():
     cursor = conn.cursor(as_dict=True)
     cursor.execute('''
         select TOP 100 aluno.ra, upper(nome) as nome 
-        from dbo.data_facts_ismart_aluno_complemento_v2 aluno
+        from dbo.data_facts_ismart_aluno_complemento aluno
         inner join (
-            select distinct ra from ismart_matricula_v2
-            where id_tempo = (select max(id_tempo) from ismart_matricula_v2) and id_projeto in (3,4)
+            select distinct ra from ismart_matricula
+            where id_tempo = (select max(id_tempo) from ismart_matricula) and id_projeto in (3,4)
         ) aux
             on aluno.ra = aux.ra
         ORDER BY aluno.ra ASC
@@ -41,10 +41,10 @@ def buscar():
 
     query_base = '''
         select TOP 100 aluno.ra, upper(nome) as nome 
-        from dbo.data_facts_ismart_aluno_complemento_v2 aluno
+        from dbo.data_facts_ismart_aluno_complemento aluno
         inner join (
-            select distinct ra from ismart_matricula_v2
-            where id_tempo = (select max(id_tempo) from ismart_matricula_v2) and id_projeto in (3,4)
+            select distinct ra from ismart_matricula
+            where id_tempo = (select max(id_tempo) from ismart_matricula) and id_projeto in (3,4)
         ) aux
             on aluno.ra = aux.ra
     '''
@@ -73,8 +73,8 @@ def aluno_detalhe(ra):
         WITH
         base as (
         SELECT ra, sum(case when id_projeto = 3 then 1 end) as qt_univ, sum(case when id_projeto = 4 then 1 end) as qt_alumni
-                FROM ismart_matricula_v2
-                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula_v2) 
+                FROM ismart_matricula
+                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula) 
                 group by ra
         )
         select 1 as in_alumni from base where qt_alumni = 1 and ra = %s
@@ -86,8 +86,8 @@ def aluno_detalhe(ra):
         WITH
         base as (
         SELECT ra, sum(case when id_projeto = 3 then 1 end) as qt_univ, sum(case when id_projeto = 4 then 1 end) as qt_alumni
-                FROM ismart_matricula_v2
-                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula_v2) 
+                FROM ismart_matricula
+                WHERE id_tempo = (SELECT MAX(id_tempo) FROM ismart_matricula) 
                 group by ra
         )
         select 1 as in_univ from base where qt_univ = 1 and qt_alumni is null and ra = %s
@@ -119,7 +119,7 @@ def api_aluno_all(ra):
         select  
             ra, id_raca, id_genero, nome, nome_social, pronome, nome_comunicacao, orientacao_sexual, tamanho_camiseta,
             last_modified_by, ValidFrom
-        from data_facts_ismart_aluno_complemento_v2
+        from data_facts_ismart_aluno_complemento
         WHERE ra = %s
     ''', (ra,))
     aluno_complemento = cursor.fetchone() or {}
@@ -130,7 +130,7 @@ def api_aluno_all(ra):
                nome_emergencia_1, tel_emergencia_1, parentesco_emergencia_1,
                nome_emergencia_2, tel_emergencia_2, parentesco_emergencia_2,
                last_modified_by, ValidFrom
-        FROM dbo.data_facts_ismart_contato_aluno_v2
+        FROM dbo.data_facts_ismart_contato_aluno
         WHERE ra = %s
     ''', (ra,))
     contato = cursor.fetchone() or {}
@@ -138,7 +138,7 @@ def api_aluno_all(ra):
     # ENDEREÇO
     cursor.execute('''
         SELECT ra, rua, numero, complemento, cep, bairro, last_modified_by, ValidFrom
-        FROM dbo.data_facts_ismart_endereco_aluno_v2
+        FROM dbo.data_facts_ismart_endereco_aluno
         WHERE ra = %s
     ''', (ra,))
     endereco = cursor.fetchone() or {}
@@ -160,7 +160,7 @@ def api_aluno_all(ra):
             turno_curso,
             periodicidade_curso,
             last_modified_by, ValidFrom
-        FROM dbo.data_facts_es_informacoes_curso_v2
+        FROM dbo.data_facts_es_informacoes_curso
         WHERE ra = %s
         order by id_tempo desc, id_informacoes_curso desc
     ''', (ra,))
@@ -169,7 +169,7 @@ def api_aluno_all(ra):
     # STATUS ALUMNI
     cursor.execute('''
         SELECT TOP 1 ra, id_status, id_tempo, last_modified_by, ValidFrom
-        FROM dbo.alumni_status_anual_v2
+        FROM dbo.alumni_status_anual
         WHERE ra = %s 
         order by id_tempo desc, id_al_status_anual desc
     ''', (ra,))
@@ -178,7 +178,7 @@ def api_aluno_all(ra):
     # ALTERAÇÃO STATUS
     cursor.execute('''
         SELECT TOP 1 ra, observacao, data_alteracao, last_modified_by, ValidFrom
-        FROM dbo.ismart_alteracao_status_v2
+        FROM dbo.ismart_alteracao_status
         WHERE ra = %s 
         order by id_tempo desc
     ''', (ra,))
@@ -187,7 +187,7 @@ def api_aluno_all(ra):
     # STATUS MENSAL
     cursor.execute('''
         SELECT TOP 1 ra, id_status, id_tempo, last_modified_by, ValidFrom
-        FROM dbo.ismart_status_mensal_v2
+        FROM dbo.ismart_status_mensal
         WHERE ra = %s
         ORDER BY ID_TEMPO DESC
     ''', (ra,))
@@ -197,7 +197,7 @@ def api_aluno_all(ra):
     cursor.execute('''
         select TOP 1 
             ra, id_es_status_meta, id_esal_status_oportunidade, top_empresa, id_tempo, last_modified_by, ValidFrom
-        from es_status_meta_mensal_v2 
+        from es_status_meta_mensal 
         where ra = %s
         order by id_tempo desc
     ''', (ra,))
@@ -242,7 +242,7 @@ def api_update(ra, tipo):
 
                 cursor.execute(
                     f"""
-                    UPDATE dbo.data_facts_ismart_contato_aluno_v2
+                    UPDATE dbo.data_facts_ismart_contato_aluno
                     SET {sets}, last_modified_by = %s
                     WHERE ra = %s
                     """,
@@ -256,7 +256,7 @@ def api_update(ra, tipo):
 
                     cursor.execute(
                         f"""
-                        INSERT INTO dbo.data_facts_ismart_contato_aluno_v2
+                        INSERT INTO dbo.data_facts_ismart_contato_aluno
                         ({', '.join(campos_insert)}) 
                         VALUES ({placeholders})
                         """,
@@ -274,7 +274,7 @@ def api_update(ra, tipo):
 
                 cursor.execute(
                     f"""
-                    UPDATE dbo.data_facts_ismart_endereco_aluno_v2
+                    UPDATE dbo.data_facts_ismart_endereco_aluno
                     SET {sets}, last_modified_by = %s
                     WHERE ra = %s
                     """,
@@ -288,7 +288,7 @@ def api_update(ra, tipo):
 
                     cursor.execute(
                         f"""
-                        INSERT INTO dbo.data_facts_ismart_endereco_aluno_v2
+                        INSERT INTO dbo.data_facts_ismart_endereco_aluno
                         ({', '.join(campos_insert)})
                         VALUES ({placeholders})
                         """,
@@ -336,7 +336,7 @@ def api_insert_curso(ra):
 
         cursor.execute(
             f"""
-            INSERT INTO dbo.data_facts_es_informacoes_curso_v2
+            INSERT INTO dbo.data_facts_es_informacoes_curso
             ({', '.join(campos)}, transferencia, last_modified_by, ra)
             VALUES ({placeholders})
             """,
@@ -348,20 +348,20 @@ def api_insert_curso(ra):
         if data.get('data_termino_real'):
             ano_mes = datetime.now().strftime('%Y') + '01'
             id_tempo = data.get('id_tempo')
-            cursor.execute(f"""INSERT INTO dbo.ismart_matricula_v2 (id_tempo, id_projeto, ra, last_modified_by) values ({ano_mes}, 4, {ra}, '{usuario}')""")
+            cursor.execute(f"""INSERT INTO dbo.ismart_matricula (id_tempo, id_projeto, ra, last_modified_by) values ({ano_mes}, 4, {ra}, '{usuario}')""")
             
             cursor.execute("""
-                UPDATE dbo.ismart_status_mensal_v2
+                UPDATE dbo.ismart_status_mensal
                 SET id_status = 8, last_modified_by = %s
                 WHERE ra = %s and id_tempo = %s
             """, (usuario, ra, id_tempo))
 
             cursor.execute("""
-                SELECT TOP 1 id_matricula FROM ismart_matricula_v2 where ra = %s and id_tempo = %s and id_projeto = 4
+                SELECT TOP 1 id_matricula FROM ismart_matricula where ra = %s and id_tempo = %s and id_projeto = 4
             """, (ra, ano_mes))
             id_matricula = cursor.fetchone()[0]
             
-            cursor.execute(f"""INSERT INTO dbo.alumni_status_anual_v2 (id_matricula, ra, id_status, id_tempo, last_modified_by) values ({id_matricula}, {ra}, 6, {ano_mes}, '{usuario}')""")
+            cursor.execute(f"""INSERT INTO dbo.alumni_status_anual (id_matricula, ra, id_status, id_tempo, last_modified_by) values ({id_matricula}, {ra}, 6, {ano_mes}, '{usuario}')""")
 
             conn.commit()
         else:
@@ -396,7 +396,7 @@ def api_update_aluno_cmp(ra):
     try:
         cursor.execute(
             f"""
-            UPDATE dbo.data_facts_ismart_aluno_complemento_v2
+            UPDATE dbo.data_facts_ismart_aluno_complemento
             SET {sets}, last_modified_by = %s
             WHERE ra = %s
             """,
@@ -430,14 +430,14 @@ def api_update_status(ra):
 
     try:
         cursor.execute("""
-            UPDATE dbo.alumni_status_anual_v2
+            UPDATE dbo.alumni_status_anual
             SET id_status = %s, last_modified_by = %s
             WHERE ra = %s and id_tempo = %s
         """, (id_status, usuario, ra, id_tempo))
 
         if cursor.rowcount == 0:
             cursor.execute("""
-                INSERT INTO dbo.alumni_status_anual_v2
+                INSERT INTO dbo.alumni_status_anual
                 (id_status, ra, last_modified_by)
                 VALUES (%s, %s, %s)
             """, (id_status, ra, usuario))
@@ -473,19 +473,19 @@ def api_update_status_mensal(ra):
 
     try:
         cursor.execute("""
-            SELECT id_matricula FROM ismart_matricula_v2 where ra = %s and id_tempo = %s
+            SELECT id_matricula FROM ismart_matricula where ra = %s and id_tempo = %s
         """, (ra, ano_mes))
         id_matricula = cursor.fetchone()
         print(id_matricula)
 
         cursor.execute("""
-            UPDATE dbo.ismart_status_mensal_v2
+            UPDATE dbo.ismart_status_mensal
             SET id_status = %s, last_modified_by = %s
             WHERE ra = %s and id_tempo = %s
         """, (id_status, usuario, ra, id_tempo))
 
         cursor.execute("""
-            INSERT INTO dbo.ismart_alteracao_status_v2
+            INSERT INTO dbo.ismart_alteracao_status
             (id_tempo, id_matricula, id_status, fonte, observacao, data_alteracao, ra, last_modified_by)
             VALUES (%s, %s, %s, 'Front', %s, %s, %s, %s)
         """, (id_tempo, id_matricula, id_status, observacao, data_alteracao, ra, usuario))
@@ -518,7 +518,7 @@ def api_insert_alteracao_status(ra):
 
     try:
         cursor.execute("""
-            INSERT INTO dbo.ismart_alteracao_status_v2
+            INSERT INTO dbo.ismart_alteracao_status
             (id_tempo, fonte, observacao, data_alteracao, ra, last_modified_by)
             VALUES (%s, 'Front', %s, %s, %s, %s)
         """, (id_tempo, observacao, data_alteracao, ra, usuario))
@@ -553,7 +553,7 @@ def api_update_es_status_meta_mensal(ra):
 
     try:
         cursor.execute("""
-            UPDATE dbo.es_status_meta_mensal_v2
+            UPDATE dbo.es_status_meta_mensal
             SET id_es_status_meta = %s, id_esal_status_oportunidade = %s, top_empresa = %s, last_modified_by = %s
             WHERE ra = %s and id_tempo = %s
         """, (id_es_status_meta, id_esal_status_oportunidade, top_empresa, usuario, ra, id_tempo))
@@ -606,7 +606,7 @@ def api_insert_reg_oportunidade(ra):
 
     try:
         cursor.execute(f"""
-            INSERT INTO dbo.data_facts_esal_registros_oportunidades_v2
+            INSERT INTO dbo.data_facts_esal_registros_oportunidades
             (
                 {', '.join(campos)}, ra, last_modified_by
             )
@@ -642,13 +642,13 @@ def api_insert_inscricao_evento(ra):
 
     try:
         cursor.execute("""
-            SELECT id_matricula FROM ismart_matricula_v2 where ra = %s and id_tempo = %s
+            SELECT id_matricula FROM ismart_matriculaere ra = %s and id_tempo = %s
         """, (ra, ano_mes))
         id_matricula = cursor.fetchone()
         print(id_matricula)
 
         cursor.execute("""
-            INSERT INTO dbo.esal_inscricoes_eventos_v2
+            INSERT INTO dbo.esal_inscricoes_eventos
             (id_matricula, ra, id_esal_tipo_participacao_eventos, id_esal_registros_eventos_projetos, horas_participacao, participou_evento, last_modified_by)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (id_matricula, ra, id_esal_tipo_participacao_eventos, id_esal_registros_eventos_projetos, horas_participacao, participou_evento, usuario))
@@ -676,7 +676,7 @@ def api_insert_descricao_evento(ra):
     try:
 
         cursor.execute("""
-            INSERT INTO dbo.esal_descricao_eventos_v2
+            INSERT INTO dbo.esal_descricao_eventos
             (id_projeto, nome_evento, descricao_evento, last_modified_by)
             VALUES (%s, %s, %s, %s)
         """, (id_projeto, nome_evento, descricao_evento, usuario))
@@ -707,12 +707,12 @@ def api_insert_registro_evento(ra):
     try:
 
         cursor.execute(f"""
-            select max(sessao_evento) + 1 as sessao_evento from esal_registros_eventos_projetos_v2 where id_esal_descricao_eventos = {id_esal_descricao_eventos}
+            select max(sessao_evento) + 1 as sessao_evento from esal_registros_eventos_projetosere id_esal_descricao_eventos = {id_esal_descricao_eventos}
         """)
         sessao_evento = cursor.fetchone()
 
         cursor.execute("""
-            INSERT INTO dbo.esal_registros_eventos_projetos_v2
+            INSERT INTO dbo.esal_registros_eventos_projetos
             (id_esal_tipos_eventos, id_esal_descricao_eventos, data_inicio, data_termino, horas_duracao, sessao_evento, id_tempo, last_modified_by)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (id_esal_tipos_eventos, id_esal_descricao_eventos, data_inicio, data_termino, horas_duracao, sessao_evento, ano_mes, usuario))
@@ -782,7 +782,7 @@ def tabelas_auxiliares():
     es_status_oport_dp = cursor.fetchall()
 
     cursor.execute("""
-        select id_esal_descricao_eventos, nome_evento from esal_descricao_eventos_v2
+        select id_esal_descricao_eventos, nome_evento from esal_descricao_eventos
     """)
     desc_eventos = cursor.fetchall()
 
