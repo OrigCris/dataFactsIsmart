@@ -130,7 +130,7 @@ def api_aluno_all(ra):
                nome_emergencia_1, tel_emergencia_1, parentesco_emergencia_1,
                nome_emergencia_2, tel_emergencia_2, parentesco_emergencia_2,
                last_modified_by, ValidFrom
-        FROM dbo.data_facts_ismart_contato_aluno
+        FROM dbo.ismart_contato_aluno
         WHERE ra = %s
     ''', (ra,))
     contato = cursor.fetchone() or {}
