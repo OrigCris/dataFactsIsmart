@@ -86,21 +86,21 @@ function render(tipo, d) {
       <h3>📞 Contato</h3>
       <div class="grid-2">
         <div>
-          <label>Email</label><input id="email" value="${sanitize(d.email)}">
+          <label>Email</label><input id="email_ismart" value="${sanitize(d.email_ismart)}">
           <label>Celular</label><input id="celular" value="${sanitize(d.celular)}">
           <label>Telefone Fixo</label><input id="telefone_fixo" value="${sanitize(d.telefone_fixo)}">
           <label>LinkedIn</label><input id="linkedin" value="${sanitize(d.linkedin)}">
         </div>
         <div>
           <fieldset><legend>Emergência 1</legend>
-            <label>Nome</label><input id="nome_emergencia_1" value="${sanitize(d.nome_emergencia_1)}">
-            <label>Telefone</label><input id="tel_emergencia_1" value="${sanitize(d.tel_emergencia_1)}">
-            <label>Parentesco</label><input id="parentesco_emergencia_1" value="${sanitize(d.parentesco_emergencia_1)}">
+            <label>Nome</label><input id="nome_emergencia1" value="${sanitize(d.nome_emergencia1)}">
+            <label>Telefone</label><input id="tel_emergencia1" value="${sanitize(d.tel_emergencia1)}">
+            <label>Parentesco</label><input id="parentesco_emergencia1" value="${sanitize(d.parentesco_emergencia1)}">
           </fieldset>
           <fieldset><legend>Emergência 2</legend>
-            <label>Nome</label><input id="nome_emergencia_2" value="${sanitize(d.nome_emergencia_2)}">
-            <label>Telefone</label><input id="tel_emergencia_2" value="${sanitize(d.tel_emergencia_2)}">
-            <label>Parentesco</label><input id="parentesco_emergencia_2" value="${sanitize(d.parentesco_emergencia_2)}">
+            <label>Nome</label><input id="nome_emergencia2" value="${sanitize(d.nome_emergencia2)}">
+            <label>Telefone</label><input id="tel_emergencia2" value="${sanitize(d.tel_emergencia2)}">
+            <label>Parentesco</label><input id="parentesco_emergencia2" value="${sanitize(d.parentesco_emergencia2)}">
           </fieldset>
         </div>
       </div>
