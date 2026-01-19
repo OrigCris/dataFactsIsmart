@@ -130,7 +130,7 @@ def api_aluno_all(ra):
                nome_emergencia_1, tel_emergencia_1, parentesco_emergencia_1,
                nome_emergencia_2, tel_emergencia_2, parentesco_emergencia_2,
                last_modified_by, ValidFrom
-        FROM dbo.ismart_contato_aluno
+        FROM dbo.data_facts_ismart_contato_aluno
         WHERE ra = %s
     ''', (ra,))
     contato = cursor.fetchone() or {}
@@ -242,7 +242,7 @@ def api_update(ra, tipo):
 
                 cursor.execute(
                     f"""
-                    UPDATE dbo.ismart_contato_aluno
+                    UPDATE dbo.data_facts_ismart_contato_aluno
                     SET {sets}, last_modified_by = %s
                     WHERE ra = %s
                     """,
@@ -256,7 +256,7 @@ def api_update(ra, tipo):
 
                     cursor.execute(
                         f"""
-                        INSERT INTO dbo.ismart_contato_aluno
+                        INSERT INTO dbo.data_facts_ismart_contato_aluno
                         ({', '.join(campos_insert)}) 
                         VALUES ({placeholders})
                         """,
