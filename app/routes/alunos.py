@@ -231,8 +231,8 @@ def api_update(ra, tipo):
         if tipo == "contato":
             campos = [
                 "email_ismart", "celular", "telefone_fixo", "linkedin",
-                "nome_emergencia_1", "tel_emergencia_1", "parentesco_emergencia_1",
-                "nome_emergencia_2", "tel_emergencia_2", "parentesco_emergencia_2"
+                "nome_emergencia1", "tel_emergencia1", "parentesco_emergencia1",
+                "nome_emergencia2", "tel_emergencia2", "parentesco_emergencia2"
             ]
             alteracoes = {k: v for k, v in data.items() if k in campos}
 
