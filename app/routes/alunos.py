@@ -16,7 +16,7 @@ def home():
     cursor = conn.cursor(as_dict=True)
     cursor.execute('''
         select TOP 100 aluno.ra, upper(nome) as nome 
-        from dbo.data_facts_ismart_aluno_complemento aluno
+        from dbo.ismart_aluno_complemento aluno
         inner join (
             select distinct ra from ismart_matricula
             where id_tempo = (select max(id_tempo) from ismart_matricula) and id_projeto in (3,4)
