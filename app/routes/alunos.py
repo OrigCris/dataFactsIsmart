@@ -242,7 +242,7 @@ def api_update(ra, tipo):
 
                 cursor.execute(
                     f"""
-                    UPDATE dbo.data_facts_ismart_contato_aluno
+                    UPDATE dbo.ismart_contato_aluno
                     SET {sets}, last_modified_by = %s
                     WHERE ra = %s
                     """,
@@ -256,7 +256,7 @@ def api_update(ra, tipo):
 
                     cursor.execute(
                         f"""
-                        INSERT INTO dbo.data_facts_ismart_contato_aluno
+                        INSERT INTO dbo.ismart_contato_aluno
                         ({', '.join(campos_insert)}) 
                         VALUES ({placeholders})
                         """,
