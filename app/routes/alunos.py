@@ -126,9 +126,9 @@ def api_aluno_all(ra):
 
     # CONTATO
     cursor.execute('''
-        SELECT ra, email, celular, telefone_fixo, linkedin,
-               nome_emergencia_1, tel_emergencia_1, parentesco_emergencia_1,
-               nome_emergencia_2, tel_emergencia_2, parentesco_emergencia_2,
+        SELECT ra, email_ismart, celular, telefone_fixo, linkedin,
+               nome_emergencia1, tel_emergencia1, parentesco_emergencia1,
+               nome_emergencia2, tel_emergencia2, parentesco_emergencia2,
                last_modified_by, ValidFrom
         FROM dbo.data_facts_ismart_contato_aluno
         WHERE ra = %s
@@ -230,7 +230,7 @@ def api_update(ra, tipo):
     try:
         if tipo == "contato":
             campos = [
-                "email", "celular", "telefone_fixo", "linkedin",
+                "email_ismart", "celular", "telefone_fixo", "linkedin",
                 "nome_emergencia_1", "tel_emergencia_1", "parentesco_emergencia_1",
                 "nome_emergencia_2", "tel_emergencia_2", "parentesco_emergencia_2"
             ]
